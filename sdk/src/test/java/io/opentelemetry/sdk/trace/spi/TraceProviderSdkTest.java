@@ -19,7 +19,6 @@ package io.opentelemetry.sdk.trace.spi;
 import static com.google.common.truth.Truth.assertThat;
 
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.sdk.trace.TracerSdkProvider;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -29,7 +28,9 @@ import org.junit.runners.JUnit4;
 public class TraceProviderSdkTest {
 
   @Test
-  public void testDefault() {
-    assertThat(OpenTelemetry.getTracerProvider()).isInstanceOf(TracerSdkProvider.class);
+  public void testDefault() throws ClassNotFoundException {
+    Class<?> delegatingClass =
+        Class.forName(TraceProviderSdk.class.getName() + "$DelegatingTracerProvider");
+    assertThat(OpenTelemetry.getTracerProvider()).isInstanceOf(delegatingClass);
   }
 }

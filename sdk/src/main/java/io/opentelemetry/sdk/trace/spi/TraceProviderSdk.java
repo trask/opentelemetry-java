@@ -17,6 +17,7 @@
 package io.opentelemetry.sdk.trace.spi;
 
 import io.opentelemetry.sdk.trace.TracerSdkProvider;
+import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.TracerProvider;
 import io.opentelemetry.trace.spi.TraceProvider;
 
@@ -24,6 +25,25 @@ import io.opentelemetry.trace.spi.TraceProvider;
 public final class TraceProviderSdk implements TraceProvider {
   @Override
   public TracerProvider create() {
-    return TracerSdkProvider.builder().build();
+    return new DelegatingTracerProvider(TracerSdkProvider.builder().build());
+  }
+
+  private static class DelegatingTracerProvider implements TracerProvider {
+
+    private final TracerProvider delegate;
+
+    private DelegatingTracerProvider(TracerProvider delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public Tracer get(String instrumentationName) {
+      return delegate.get(instrumentationName);
+    }
+
+    @Override
+    public Tracer get(String instrumentationName, String instrumentationVersion) {
+      return delegate.get(instrumentationName, instrumentationVersion);
+    }
   }
 }
