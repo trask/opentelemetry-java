@@ -286,11 +286,8 @@ For example, a basic configuration instantiates the SDK tracer registry and sets
 traces to a logging stream.
 
 ```java
-// Get the tracer
-TracerSdkProvider tracerProvider = OpenTelemetrySdk.getTracerProvider();
-
 // Set to export the traces to a logging stream
-tracerProvider.addSpanProcessor(
+OpenTelemetryTraceSdk.addSpanProcessor(
     SimpleSpansProcessor.newBuilder(
         new LoggingSpanExporter()
     ).build());

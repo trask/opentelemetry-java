@@ -33,8 +33,7 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.exporters.logging.LoggingSpanExporter;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.trace.TracerSdkProvider;
+import io.opentelemetry.sdk.trace.OpenTelemetryTraceSdk;
 import io.opentelemetry.sdk.trace.export.SimpleSpansProcessor;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
@@ -86,10 +85,8 @@ public class HelloWorldClientStream {
   }
 
   private void initTracer() {
-    // Use the OpenTelemetry SDK
-    TracerSdkProvider tracerProvider = OpenTelemetrySdk.getTracerProvider();
     // Set to process the spans by the log exporter
-    tracerProvider.addSpanProcessor(SimpleSpansProcessor.newBuilder(exporter).build());
+    OpenTelemetryTraceSdk.addSpanProcessor(SimpleSpansProcessor.newBuilder(exporter).build());
   }
 
   public void shutdown() throws InterruptedException {

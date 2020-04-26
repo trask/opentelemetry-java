@@ -21,7 +21,7 @@ import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.exporters.jaeger.proto.api_v2.Collector;
 import io.opentelemetry.exporters.jaeger.proto.api_v2.CollectorServiceGrpc;
 import io.opentelemetry.exporters.jaeger.proto.api_v2.Model;
-import io.opentelemetry.sdk.trace.TracerSdkProvider;
+import io.opentelemetry.sdk.trace.OpenTelemetryTraceSdk;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.BatchSpansProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
@@ -226,14 +226,10 @@ public final class JaegerGrpcSpanExporter implements SpanExporter {
       return new JaegerGrpcSpanExporter(serviceName, channel, deadlineMs);
     }
 
-    /**
-     * Installs exporter into tracer SDK provider with batching span processor.
-     *
-     * @param tracerSdkProvider tracer SDK provider
-     */
-    public void install(TracerSdkProvider tracerSdkProvider) {
+    /** Installs exporter into tracer SDK provider with batching span processor. */
+    public void install() {
       BatchSpansProcessor spansProcessor = BatchSpansProcessor.create(this.build());
-      tracerSdkProvider.addSpanProcessor(spansProcessor);
+      OpenTelemetryTraceSdk.addSpanProcessor(spansProcessor);
     }
 
     private Builder() {}

@@ -18,11 +18,10 @@ package io.opentelemetry.sdk.example;
 
 import io.opentelemetry.common.AttributeValue;
 import io.opentelemetry.exporters.logging.LoggingSpanExporter;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.trace.OpenTelemetryTraceSdk;
 import io.opentelemetry.sdk.trace.Sampler;
 import io.opentelemetry.sdk.trace.Samplers;
 import io.opentelemetry.sdk.trace.TracerSdk;
-import io.opentelemetry.sdk.trace.TracerSdkProvider;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.SimpleSpansProcessor;
 import io.opentelemetry.trace.Link;
@@ -37,11 +36,10 @@ import java.util.Map;
 class ConfigureTraceExample {
 
   // Configure a tracer for these examples
-  static TracerSdkProvider tracerProvider = OpenTelemetrySdk.getTracerProvider();
-  static TracerSdk tracer = tracerProvider.get("ConfigureTraceExample");
+  static TracerSdk tracer = OpenTelemetry.get("ConfigureTraceExample");
 
   static {
-    tracerProvider.addSpanProcessor(
+    OpenTelemetryTraceSdk.addSpanProcessor(
         SimpleSpansProcessor.newBuilder(new LoggingSpanExporter()).build());
   }
 
@@ -59,8 +57,11 @@ class ConfigureTraceExample {
     // The configuration can be changed in the trace provider.
     // For example, we can change the maximum number of Attributes per span to 1.
     TraceConfig newConf =
-        tracerProvider.getActiveTraceConfig().toBuilder().setMaxNumberOfAttributes(1).build();
-    tracerProvider.updateActiveTraceConfig(newConf);
+        OpenTelemetryTraceSdk.getActiveTraceConfig()
+            .toBuilder()
+            .setMaxNumberOfAttributes(1)
+            .build();
+    OpenTelemetryTraceSdk.updateActiveTraceConfig(newConf);
     printTraceConfig();
 
     // If more attributes than allowed by the configuration are set, they are dropped.
@@ -74,31 +75,36 @@ class ConfigureTraceExample {
     //  - alwaysOff: it rejects all traces
     //  - probability: it samples traces based on the probability passed in input
     TraceConfig alwaysOff =
-        tracerProvider.getActiveTraceConfig().toBuilder().setSampler(Samplers.alwaysOff()).build();
+        OpenTelemetryTraceSdk.getActiveTraceConfig()
+            .toBuilder()
+            .setSampler(Samplers.alwaysOff())
+            .build();
     TraceConfig alwaysOn =
-        tracerProvider.getActiveTraceConfig().toBuilder().setSampler(Samplers.alwaysOn()).build();
+        OpenTelemetryTraceSdk.getActiveTraceConfig()
+            .toBuilder()
+            .setSampler(Samplers.alwaysOn())
+            .build();
     TraceConfig probability =
-        tracerProvider
-            .getActiveTraceConfig()
+        OpenTelemetryTraceSdk.getActiveTraceConfig()
             .toBuilder()
             .setSampler(Samplers.probability(0.5))
             .build();
 
     // We update the configuration to use the alwaysOff sampler.
-    tracerProvider.updateActiveTraceConfig(alwaysOff);
+    OpenTelemetryTraceSdk.updateActiveTraceConfig(alwaysOff);
     printTraceConfig();
     tracer.spanBuilder("Not forwarded to any processors").startSpan().end();
     tracer.spanBuilder("Not forwarded to any processors").startSpan().end();
 
     // We update the configuration to use the alwaysOn sampler.
-    tracerProvider.updateActiveTraceConfig(alwaysOn);
+    OpenTelemetryTraceSdk.updateActiveTraceConfig(alwaysOn);
     printTraceConfig();
     tracer.spanBuilder("Forwarded to all processors").startSpan().end();
     tracer.spanBuilder("Forwarded to all processors").startSpan().end();
 
     // We update the configuration to use the probability sampler which was configured to sample
     // only 50% of the spans.
-    tracerProvider.updateActiveTraceConfig(probability);
+    OpenTelemetryTraceSdk.updateActiveTraceConfig(probability);
     printTraceConfig();
     for (int i = 0; i < 10; i++) {
       tracer
@@ -145,8 +151,11 @@ class ConfigureTraceExample {
 
     // Add MySampler to the Trace Configuration
     TraceConfig mySampler =
-        tracerProvider.getActiveTraceConfig().toBuilder().setSampler(new MySampler()).build();
-    tracerProvider.updateActiveTraceConfig(mySampler);
+        OpenTelemetryTraceSdk.getActiveTraceConfig()
+            .toBuilder()
+            .setSampler(new MySampler())
+            .build();
+    OpenTelemetryTraceSdk.updateActiveTraceConfig(mySampler);
     printTraceConfig();
 
     tracer.spanBuilder("#1 - SamPleD").startSpan().end();
@@ -162,11 +171,11 @@ class ConfigureTraceExample {
     tracer.spanBuilder("#5").startSpan().end();
 
     // Example's over! We can release the resources of OpenTelemetry calling the shutdown method.
-    OpenTelemetrySdk.getTracerProvider().shutdown();
+    OpenTelemetryTraceSdk.shutdown();
   }
 
   private static void printTraceConfig() {
-    TraceConfig config = tracerProvider.getActiveTraceConfig();
+    TraceConfig config = OpenTelemetryTraceSdk.getActiveTraceConfig();
     System.err.println("==================================");
     System.err.print("Max number of attributes: ");
     System.err.println(config.getMaxNumberOfAttributes());

@@ -21,8 +21,7 @@ import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.HttpTextFormat;
 import io.opentelemetry.exporters.logging.LoggingSpanExporter;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.trace.TracerSdkProvider;
+import io.opentelemetry.sdk.trace.OpenTelemetryTraceSdk;
 import io.opentelemetry.sdk.trace.export.SimpleSpansProcessor;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Status;
@@ -50,12 +49,11 @@ public class HttpClient {
       };
 
   private void initTracer() {
-    // Get the tracer
-    TracerSdkProvider tracerProvider = OpenTelemetrySdk.getTracerProvider();
     // Show that multiple exporters can be used
 
     // Set to export the traces also to a log file
-    tracerProvider.addSpanProcessor(SimpleSpansProcessor.newBuilder(loggingExporter).build());
+    OpenTelemetryTraceSdk.addSpanProcessor(
+        SimpleSpansProcessor.newBuilder(loggingExporter).build());
   }
 
   private HttpClient() throws Exception {

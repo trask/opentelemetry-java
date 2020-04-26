@@ -4,7 +4,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.OpenTelemetry;
 import io.opentelemetry.exporters.jaeger.JaegerGrpcSpanExporter;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.trace.OpenTelemetryTraceSdk;
 import io.opentelemetry.sdk.trace.export.SimpleSpansProcessor;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
@@ -38,8 +38,8 @@ public class JaegerExample {
             .build();
 
     // Set to process the spans by the Jaeger Exporter
-    OpenTelemetrySdk.getTracerProvider()
-        .addSpanProcessor(SimpleSpansProcessor.newBuilder(this.jaegerExporter).build());
+    OpenTelemetryTraceSdk.addSpanProcessor(
+        SimpleSpansProcessor.newBuilder(this.jaegerExporter).build());
   }
 
   private void myWonderfulUseCase() {

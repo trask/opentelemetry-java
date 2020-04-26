@@ -17,10 +17,9 @@
 package io.opentelemetry.sdk.example;
 
 import io.opentelemetry.exporters.logging.LoggingSpanExporter;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.MultiSpanProcessor;
+import io.opentelemetry.sdk.trace.OpenTelemetryTraceSdk;
 import io.opentelemetry.sdk.trace.SpanProcessor;
-import io.opentelemetry.sdk.trace.TracerSdkProvider;
 import io.opentelemetry.sdk.trace.export.BatchSpansProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpansProcessor;
 import io.opentelemetry.trace.Tracer;
@@ -31,10 +30,8 @@ public class ConfigureSpanProcessorExample {
 
   static LoggingSpanExporter exporter = new LoggingSpanExporter();
 
-  // Get the Tracer Provider
-  static TracerSdkProvider tracerProvider = OpenTelemetrySdk.getTracerProvider();
   // Acquire a tracer
-  static Tracer tracer = tracerProvider.get("ConfigureSpanProcessorExample");
+  static Tracer tracer = OpenTelemetry.get("ConfigureSpanProcessorExample");
 
   public static void main(String[] args) throws Exception {
 
@@ -54,7 +51,7 @@ public class ConfigureSpanProcessorExample {
     // When exiting, it is recommended to call the shutdown method. This method calls `shutdown` on
     // all configured SpanProcessors. This way, the configured exporters can release all resources
     // and terminate their job sending the remaining traces to their back end.
-    tracerProvider.shutdown();
+    OpenTelemetryTraceSdk.shutdown();
   }
 
   private static void defaultSpanProcessors() {
@@ -68,7 +65,7 @@ public class ConfigureSpanProcessorExample {
     // Configure the simple spans processor. This span processor exports span immediately after they
     // are ended.
     SimpleSpansProcessor simpleSpansProcessor = SimpleSpansProcessor.newBuilder(exporter).build();
-    tracerProvider.addSpanProcessor(simpleSpansProcessor);
+    OpenTelemetryTraceSdk.addSpanProcessor(simpleSpansProcessor);
 
     // Configure the batch spans processor. This span processor exports span in batches.
     BatchSpansProcessor batchSpansProcessor =
@@ -80,11 +77,11 @@ public class ConfigureSpanProcessorExample {
                 30_000) // set the max amount of time an export can run before getting interrupted
             .setScheduleDelayMillis(5000) // set time between two different exports
             .build();
-    tracerProvider.addSpanProcessor(batchSpansProcessor);
+    OpenTelemetryTraceSdk.addSpanProcessor(batchSpansProcessor);
 
     // Configure the multi spans processor. A MultiSpanProcessor accepts a list of Span Processors.
     SpanProcessor multiSpanProcessor =
         MultiSpanProcessor.create(Arrays.asList(simpleSpansProcessor, batchSpansProcessor));
-    tracerProvider.addSpanProcessor(multiSpanProcessor);
+    OpenTelemetryTraceSdk.addSpanProcessor(multiSpanProcessor);
   }
 }

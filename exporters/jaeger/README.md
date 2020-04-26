@@ -16,7 +16,7 @@ An example of simples Jaeger gRPC exporter initialization. In this case
 spans will be sent to Jaeger collector running on `localhost`:
 ```java
 Builder builder = JaegerGrpcSpanExporter.Builder.fromEnv();
-builder.install(OpenTelemetrySdk.getTracerProvider());
+builder.install();
 ```
 
 ## Proto files

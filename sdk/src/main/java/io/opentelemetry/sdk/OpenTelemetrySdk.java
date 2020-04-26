@@ -34,16 +34,6 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public final class OpenTelemetrySdk {
   /**
-   * Returns a {@link TracerSdkProvider}.
-   *
-   * @return TracerProvider returned by {@link OpenTelemetry#getTracerProvider()}.
-   * @since 0.1.0
-   */
-  public static TracerSdkProvider getTracerProvider() {
-    return (TracerSdkProvider) OpenTelemetry.getTracerProvider();
-  }
-
-  /**
    * Returns a {@link MeterSdkProvider}.
    *
    * @return MeterProvider returned by {@link OpenTelemetry#getMeterProvider()}.

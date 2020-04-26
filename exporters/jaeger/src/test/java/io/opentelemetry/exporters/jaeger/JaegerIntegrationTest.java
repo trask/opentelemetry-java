@@ -21,7 +21,7 @@ import static io.restassured.RestAssured.given;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.OpenTelemetry;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.trace.OpenTelemetryTraceSdk;
 import io.opentelemetry.sdk.trace.export.SimpleSpansProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.trace.Span;
@@ -86,8 +86,7 @@ public class JaegerIntegrationTest {
             .setChannel(jaegerChannel)
             .setDeadlineMs(30000)
             .build();
-    OpenTelemetrySdk.getTracerProvider()
-        .addSpanProcessor(SimpleSpansProcessor.newBuilder(jaegerExporter).build());
+    OpenTelemetryTraceSdk.addSpanProcessor(SimpleSpansProcessor.newBuilder(jaegerExporter).build());
   }
 
   private void imitateWork() {
