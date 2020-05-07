@@ -16,12 +16,12 @@
 
 package io.opentelemetry.sdk.trace;
 
+import io.opentelemetry.context.CurrentContext;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.trace.DefaultTracer;
 import io.opentelemetry.trace.Span;
 import io.opentelemetry.trace.Tracer;
-import io.opentelemetry.trace.TracingContextUtils;
 
 /** {@link TracerSdk} is SDK implementation of {@link Tracer}. */
 final class TracerSdk implements Tracer {
@@ -33,14 +33,16 @@ final class TracerSdk implements Tracer {
     this.instrumentationLibraryInfo = instrumentationLibraryInfo;
   }
 
+  // TODO (trask) can we remove this now?
   @Override
   public Span getCurrentSpan() {
-    return TracingContextUtils.getCurrentSpan();
+    return CurrentContext.getSpan();
   }
 
+  // TODO (trask) can we remove this now?
   @Override
   public Scope withSpan(Span span) {
-    return TracingContextUtils.currentContextWith(span);
+    return CurrentContext.withSpan(span);
   }
 
   @Override
