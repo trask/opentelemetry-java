@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 1.21.0 (2022-11-17)
 
 Stuff, stuff, stuff.
 
