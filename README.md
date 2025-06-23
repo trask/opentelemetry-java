@@ -254,35 +254,38 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 * Keys to successful PRs
 * Guide to using gradle composite builds
 
-### Code owners
+## Community members
 
-Triagers:
+### Maintainers
 
-- [Gregor Zeitlinger](https://github.com/zeitlinger), Grafana Labs
+- [Jack Berg](https://github.com/jack-berg), New Relic
+- [John Watson](https://github.com/jkwatson), Verta.ai
 
-*Find more about the triager role in [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#triager).*
+Find more about the maintainer role in the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#maintainer).
 
-Approvers ([@open-telemetry/java-approvers](https://github.com/orgs/open-telemetry/teams/java-approvers)):
+### Approvers
 
 - [Jason Plumb](https://github.com/breedx-splk), Splunk
 - [Josh Suereth](https://github.com/jsuereth), Google
 - [Lauri Tulmin](https://github.com/laurit), Splunk
 - [Trask Stalnaker](https://github.com/trask), Microsoft
 
-*Find more about the approver role in [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#approver).*
+Find more about the approver role in the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#approver).
 
-Maintainers ([@open-telemetry/java-maintainers](https://github.com/orgs/open-telemetry/teams/java-maintainers)):
+### Triagers
 
-- [Jack Berg](https://github.com/jack-berg), New Relic
-- [John Watson](https://github.com/jkwatson), Verta.ai
+- [Gregor Zeitlinger](https://github.com/zeitlinger), Grafana Labs
 
-Emeritus:
+Find more about the triager role in the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#triager).
 
-- Maintainer [Bogdan Drutu](https://github.com/BogdanDrutu)
-- Maintainer [Carlos Alberto](https://github.com/carlosalberto)
-- Approver [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek)
+### Emeritus maintainers
 
-*Find more about the maintainer role in [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#maintainer).*
+- [Bogdan Drutu](https://github.com/BogdanDrutu)
+- [Carlos Alberto](https://github.com/carlosalberto)
+
+### Emeritus approvers
+
+- [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek)
 
 ### Help wanted
 
