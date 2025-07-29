@@ -29,8 +29,7 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
 
   SeverityBasedLogRecordProcessor(
       Severity minimumSeverity, List<LogRecordProcessor> processors) {
-    this.minimumSeverity = requireNonNull(minimumSeverity, "minimumSeverity");
-    this.processors = Collections.unmodifiableList(new ArrayList<>(processors));
+    this.minimumSeverity = minimumSeverity;
     this.delegate = LogRecordProcessor.composite(processors);
   }
 
@@ -78,8 +77,8 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
     return "SeverityBasedLogRecordProcessor{"
         + "minimumSeverity="
         + minimumSeverity
-        + ", processors="
-        + processors
+        + ", delegate="
+        + delegate
         + '}';
   }
 }
