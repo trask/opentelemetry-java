@@ -21,15 +21,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * <p>This processor only forwards log records to downstream processors if the log record's
  * severity level is greater than or equal to the configured minimum severity level.
- *
- * @since 1.45.0
  */
 public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor {
 
   private final Severity minimumSeverity;
   private final LogRecordProcessor delegate;
-  private final List<LogRecordProcessor> processors;
-  private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
   SeverityBasedLogRecordProcessor(
       Severity minimumSeverity, List<LogRecordProcessor> processors) {
@@ -60,9 +56,6 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
 
   @Override
   public CompletableResultCode shutdown() {
-    if (!isShutdown.compareAndSet(false, true)) {
-      return CompletableResultCode.ofSuccess();
-    }
     return delegate.shutdown();
   }
 
@@ -78,15 +71,6 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
    */
   public Severity getMinimumSeverity() {
     return minimumSeverity;
-  }
-
-  /**
-   * Returns an unmodifiable list of downstream processors.
-   *
-   * @return the list of downstream processors
-   */
-  public List<LogRecordProcessor> getProcessors() {
-    return processors;
   }
 
   @Override

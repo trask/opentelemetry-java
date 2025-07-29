@@ -14,8 +14,6 @@ import java.util.List;
 
 /**
  * ComponentProvider for SeverityBasedLogRecordProcessor to support declarative configuration.
- * 
- * @since 1.45.0
  */
 public class SeverityBasedLogRecordProcessorComponentProvider implements ComponentProvider<LogRecordProcessor> {
 

@@ -13,8 +13,6 @@ import java.util.List;
 
 /**
  * Builder class for {@link SeverityBasedLogRecordProcessor}.
- *
- * @since 1.45.0
  */
 public final class SeverityBasedLogRecordProcessorBuilder {
 
