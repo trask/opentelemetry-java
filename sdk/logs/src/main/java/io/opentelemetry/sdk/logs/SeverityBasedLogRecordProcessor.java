@@ -27,13 +27,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor {
 
   private final Severity minimumSeverity;
-  private final List<LogRecordProcessor> processors;
-  private final AtomicBoolean isShutdown = new AtomicBoolean(false);
+  private final LogRecordProcessor delegate;
 
   SeverityBasedLogRecordProcessor(
       Severity minimumSeverity, List<LogRecordProcessor> processors) {
     this.minimumSeverity = requireNonNull(minimumSeverity, "minimumSeverity");
-    this.processors = Collections.unmodifiableList(new ArrayList<>(processors));
+    this.delegate = LogRecordProcessor.composite(processors);
   }
 
   /**
@@ -49,35 +48,21 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
 
   @Override
   public void onEmit(Context context, ReadWriteLogRecord logRecord) {
-    // Fast path: check severity first before delegation
     Severity logSeverity = logRecord.getSeverity();
     if (logSeverity.getSeverityNumber() >= minimumSeverity.getSeverityNumber()) {
-      for (LogRecordProcessor processor : processors) {
-        processor.onEmit(context, logRecord);
-      }
+      delegate.onEmit(context, logRecord);
     }
     // If severity doesn't meet minimum requirement, drop the log record (no delegation)
   }
 
   @Override
   public CompletableResultCode shutdown() {
-    if (isShutdown.getAndSet(true)) {
-      return CompletableResultCode.ofSuccess();
-    }
-    List<CompletableResultCode> results = new ArrayList<>(processors.size());
-    for (LogRecordProcessor processor : processors) {
-      results.add(processor.shutdown());
-    }
-    return CompletableResultCode.ofAll(results);
+    return delegate.shutdown();
   }
 
   @Override
   public CompletableResultCode forceFlush() {
-    List<CompletableResultCode> results = new ArrayList<>(processors.size());
-    for (LogRecordProcessor processor : processors) {
-      results.add(processor.forceFlush());
-    }
-    return CompletableResultCode.ofAll(results);
+    return delegate.forceFlush();
   }
 
   /**
@@ -103,8 +88,8 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
     return "SeverityBasedLogRecordProcessor{"
         + "minimumSeverity="
         + minimumSeverity
-        + ", processors="
-        + processors
+        + ", delegate="
+        + delegate
         + '}';
   }
 }
