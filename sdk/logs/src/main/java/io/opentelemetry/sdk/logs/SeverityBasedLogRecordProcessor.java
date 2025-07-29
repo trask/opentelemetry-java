@@ -28,10 +28,13 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
 
   private final Severity minimumSeverity;
   private final LogRecordProcessor delegate;
+  private final List<LogRecordProcessor> processors;
+  private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
   SeverityBasedLogRecordProcessor(
       Severity minimumSeverity, List<LogRecordProcessor> processors) {
     this.minimumSeverity = requireNonNull(minimumSeverity, "minimumSeverity");
+    this.processors = Collections.unmodifiableList(new ArrayList<>(processors));
     this.delegate = LogRecordProcessor.composite(processors);
   }
 
@@ -57,6 +60,9 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
 
   @Override
   public CompletableResultCode shutdown() {
+    if (!isShutdown.compareAndSet(false, true)) {
+      return CompletableResultCode.ofSuccess();
+    }
     return delegate.shutdown();
   }
 
@@ -88,8 +94,8 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
     return "SeverityBasedLogRecordProcessor{"
         + "minimumSeverity="
         + minimumSeverity
-        + ", delegate="
-        + delegate
+        + ", processors="
+        + processors
         + '}';
   }
 }
