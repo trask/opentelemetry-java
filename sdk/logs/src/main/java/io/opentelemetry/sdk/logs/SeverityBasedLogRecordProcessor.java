@@ -11,6 +11,7 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Implementation of {@link LogRecordProcessor} that filters log records based on minimum severity
@@ -23,6 +24,7 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
 
   private final Severity minimumSeverity;
   private final LogRecordProcessor delegate;
+  private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
   SeverityBasedLogRecordProcessor(
       Severity minimumSeverity, List<LogRecordProcessor> processors) {
@@ -51,6 +53,9 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
 
   @Override
   public CompletableResultCode shutdown() {
+    if (isShutdown.getAndSet(true)) {
+      return CompletableResultCode.ofSuccess();
+    }
     return delegate.shutdown();
   }
 

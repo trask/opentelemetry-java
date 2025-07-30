@@ -61,7 +61,7 @@ class SeverityBasedLogRecordProcessorTest {
   @Test
   void builder_NullProcessor() {
     assertThatThrownBy(
-            () -> SeverityBasedLogRecordProcessor.builder(Severity.INFO).addProcessor(null))
+            () -> SeverityBasedLogRecordProcessor.builder(Severity.INFO).addProcessors((LogRecordProcessor) null))
         .isInstanceOf(NullPointerException.class)
         .hasMessageContaining("processor");
   }
@@ -92,8 +92,7 @@ class SeverityBasedLogRecordProcessorTest {
 
     SeverityBasedLogRecordProcessor processor =
         SeverityBasedLogRecordProcessor.builder(Severity.WARN)
-            .addProcessor(processor1)
-            .addProcessor(processor2)
+            .addProcessors(processor1, processor2)
             .build();
 
     processor.onEmit(context, logRecord);
@@ -108,8 +107,7 @@ class SeverityBasedLogRecordProcessorTest {
 
     SeverityBasedLogRecordProcessor processor =
         SeverityBasedLogRecordProcessor.builder(Severity.WARN)
-            .addProcessor(processor1)
-            .addProcessor(processor2)
+            .addProcessors(processor1, processor2)
             .build();
 
     processor.onEmit(context, logRecord);
@@ -124,8 +122,7 @@ class SeverityBasedLogRecordProcessorTest {
 
     SeverityBasedLogRecordProcessor processor =
         SeverityBasedLogRecordProcessor.builder(Severity.WARN)
-            .addProcessor(processor1)
-            .addProcessor(processor2)
+            .addProcessors(processor1, processor2)
             .build();
 
     processor.onEmit(context, logRecord);
@@ -140,7 +137,7 @@ class SeverityBasedLogRecordProcessorTest {
 
     SeverityBasedLogRecordProcessor processor =
         SeverityBasedLogRecordProcessor.builder(Severity.INFO)
-            .addProcessor(processor1)
+            .addProcessors(processor1)
             .build();
 
     processor.onEmit(context, logRecord);
@@ -151,7 +148,7 @@ class SeverityBasedLogRecordProcessorTest {
   @Test
   void onEmit_VariousSeverityLevels() {
     SeverityBasedLogRecordProcessor processor =
-        SeverityBasedLogRecordProcessor.builder(Severity.WARN).addProcessor(processor1).build();
+        SeverityBasedLogRecordProcessor.builder(Severity.WARN).addProcessors(processor1).build();
 
     // Test all severity levels
     testSeverityLevel(processor, Severity.TRACE, /* shouldDelegate= */ false);
@@ -184,8 +181,7 @@ class SeverityBasedLogRecordProcessorTest {
   void shutdown_DelegatesToAllProcessors() {
     SeverityBasedLogRecordProcessor processor =
         SeverityBasedLogRecordProcessor.builder(Severity.INFO)
-            .addProcessor(processor1)
-            .addProcessor(processor2)
+            .addProcessors(processor1, processor2)
             .build();
 
     CompletableResultCode result = processor.shutdown();
@@ -198,7 +194,7 @@ class SeverityBasedLogRecordProcessorTest {
   @Test
   void shutdown_OnlyOnce() {
     SeverityBasedLogRecordProcessor processor =
-        SeverityBasedLogRecordProcessor.builder(Severity.INFO).addProcessor(processor1).build();
+        SeverityBasedLogRecordProcessor.builder(Severity.INFO).addProcessors(processor1).build();
 
     CompletableResultCode result1 = processor.shutdown();
     CompletableResultCode result2 = processor.shutdown();
@@ -212,8 +208,7 @@ class SeverityBasedLogRecordProcessorTest {
   void forceFlush_DelegatesToAllProcessors() {
     SeverityBasedLogRecordProcessor processor =
         SeverityBasedLogRecordProcessor.builder(Severity.INFO)
-            .addProcessor(processor1)
-            .addProcessor(processor2)
+            .addProcessors(processor1, processor2)
             .build();
 
     CompletableResultCode result = processor.forceFlush();
@@ -226,7 +221,7 @@ class SeverityBasedLogRecordProcessorTest {
   @Test
   void getMinimumSeverity() {
     SeverityBasedLogRecordProcessor processor =
-        SeverityBasedLogRecordProcessor.builder(Severity.ERROR).addProcessor(processor1).build();
+        SeverityBasedLogRecordProcessor.builder(Severity.ERROR).addProcessors(processor1).build();
 
     assertThat(processor.getMinimumSeverity()).isEqualTo(Severity.ERROR);
   }
@@ -234,7 +229,7 @@ class SeverityBasedLogRecordProcessorTest {
   @Test
   void toString_Valid() {
     SeverityBasedLogRecordProcessor processor =
-        SeverityBasedLogRecordProcessor.builder(Severity.WARN).addProcessor(processor1).build();
+        SeverityBasedLogRecordProcessor.builder(Severity.WARN).addProcessors(processor1).build();
 
     String toString = processor.toString();
     assertThat(toString).contains("SeverityBasedLogRecordProcessor");
@@ -249,8 +244,7 @@ class SeverityBasedLogRecordProcessorTest {
 
     SeverityBasedLogRecordProcessor processor =
         SeverityBasedLogRecordProcessor.builder(Severity.INFO)
-            .addProcessor(processor1)
-            .addProcessor(processor2)
+            .addProcessors(processor1, processor2)
             .build();
 
     CompletableResultCode result = processor.shutdown();
@@ -267,8 +261,7 @@ class SeverityBasedLogRecordProcessorTest {
 
     SeverityBasedLogRecordProcessor processor =
         SeverityBasedLogRecordProcessor.builder(Severity.INFO)
-            .addProcessor(processor1)
-            .addProcessor(processor2)
+            .addProcessors(processor1, processor2)
             .build();
 
     CompletableResultCode result = processor.forceFlush();
