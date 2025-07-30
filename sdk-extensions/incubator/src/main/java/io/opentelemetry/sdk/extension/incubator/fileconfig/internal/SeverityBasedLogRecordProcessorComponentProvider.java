@@ -35,7 +35,7 @@ public class SeverityBasedLogRecordProcessorComponentProvider implements Compone
   public LogRecordProcessor create(DeclarativeConfigProperties config) {
     String minimumSeverityStr = config.getString("minimum_severity");
     if (minimumSeverityStr == null) {
-      throw new IllegalArgumentException("minimum_severity is required for severity_based log processor");
+      throw new IllegalArgumentException("minimum_severity is required for severity_based log processors");
     }
     
     Severity minimumSeverity;
@@ -47,7 +47,7 @@ public class SeverityBasedLogRecordProcessorComponentProvider implements Compone
     
     List<DeclarativeConfigProperties> processorConfigs = config.getStructuredList("processors");
     if (processorConfigs == null || processorConfigs.isEmpty()) {
-      throw new IllegalArgumentException("At least one processor is required for severity_based log processor");
+      throw new IllegalArgumentException("At least one processor is required for severity_based log processors");
     }
     
     List<LogRecordProcessor> processors = new ArrayList<>();

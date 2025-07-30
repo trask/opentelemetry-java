@@ -24,7 +24,6 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
 
   private final Severity minimumSeverity;
   private final LogRecordProcessor delegate;
-  private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
   SeverityBasedLogRecordProcessor(
       Severity minimumSeverity, List<LogRecordProcessor> processors) {
@@ -46,18 +45,13 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
 
   @Override
   public void onEmit(Context context, ReadWriteLogRecord logRecord) {
-    Severity logSeverity = logRecord.getSeverity();
-    if (logSeverity.getSeverityNumber() >= minimumSeverity.getSeverityNumber()) {
+    if (logRecord.getSeverity().getSeverityNumber() >= minimumSeverity.getSeverityNumber()) {
       delegate.onEmit(context, logRecord);
     }
-    // If severity doesn't meet minimum requirement, drop the log record (no delegation)
   }
 
   @Override
   public CompletableResultCode shutdown() {
-    if (isShutdown.getAndSet(true)) {
-      return CompletableResultCode.ofSuccess();
-    }
     return delegate.shutdown();
   }
 
@@ -66,12 +60,7 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
     return delegate.forceFlush();
   }
 
-  /**
-   * Returns the minimum severity level required for processing.
-   *
-   * @return the minimum severity level
-   */
-  public Severity getMinimumSeverity() {
+  Severity getMinimumSeverity() {
     return minimumSeverity;
   }
 
