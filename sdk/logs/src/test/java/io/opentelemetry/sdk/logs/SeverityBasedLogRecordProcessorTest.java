@@ -66,7 +66,7 @@ class SeverityBasedLogRecordProcessorTest {
   }
 
   @Test
-  void builder_NullProcessors() {
+  void builder_NullProcessorArray() {
     assertThatThrownBy(
             () ->
                 SeverityBasedLogRecordProcessor.builder(Severity.INFO)
