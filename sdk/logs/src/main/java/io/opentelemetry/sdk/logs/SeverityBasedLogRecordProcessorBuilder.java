@@ -24,6 +24,18 @@ public final class SeverityBasedLogRecordProcessorBuilder {
   }
 
   /**
+   * Adds a {@link LogRecordProcessor} to the list of downstream processors.
+   *
+   * @param processor the processor to add
+   * @return this builder
+   */
+  public SeverityBasedLogRecordProcessorBuilder addProcessor(LogRecordProcessor processor) {
+    requireNonNull(processor, "processor");
+    processors.add(processor);
+    return this;
+  }
+
+  /**
    * Adds multiple {@link LogRecordProcessor}s to the list of downstream processors.
    *
    * @param processors the processors to add
@@ -32,8 +44,7 @@ public final class SeverityBasedLogRecordProcessorBuilder {
   public SeverityBasedLogRecordProcessorBuilder addProcessors(LogRecordProcessor... processors) {
     requireNonNull(processors, "processors");
     for (LogRecordProcessor processor : processors) {
-      requireNonNull(processor, "processor");
-      this.processors.add(processor);
+      addProcessor(processor);
     }
     return this;
   }
@@ -48,8 +59,7 @@ public final class SeverityBasedLogRecordProcessorBuilder {
       Iterable<LogRecordProcessor> processors) {
     requireNonNull(processors, "processors");
     for (LogRecordProcessor processor : processors) {
-      requireNonNull(processor, "processor");
-      this.processors.add(processor);
+      addProcessor(processor);
     }
     return this;
   }

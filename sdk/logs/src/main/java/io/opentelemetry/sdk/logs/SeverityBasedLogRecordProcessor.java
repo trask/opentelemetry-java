@@ -10,8 +10,6 @@ import static java.util.Objects.requireNonNull;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -26,10 +24,12 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
 
   private final Severity minimumSeverity;
   private final LogRecordProcessor delegate;
+  private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
   SeverityBasedLogRecordProcessor(
       Severity minimumSeverity, List<LogRecordProcessor> processors) {
-    this.minimumSeverity = minimumSeverity;
+    this.minimumSeverity = requireNonNull(minimumSeverity, "minimumSeverity");
+    requireNonNull(processors, "processors");
     this.delegate = LogRecordProcessor.composite(processors);
   }
 
@@ -55,6 +55,9 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
 
   @Override
   public CompletableResultCode shutdown() {
+    if (isShutdown.getAndSet(true)) {
+      return CompletableResultCode.ofSuccess();
+    }
     return delegate.shutdown();
   }
 

@@ -17,7 +17,6 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import java.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -233,38 +232,6 @@ class SeverityBasedLogRecordProcessorTest {
   }
 
   @Test
-  void getProcessors() {
-    SeverityBasedLogRecordProcessor processor =
-        SeverityBasedLogRecordProcessor.builder(Severity.INFO)
-            .addProcessor(processor1)
-            .addProcessor(processor2)
-            .build();
-
-    assertThat(processor.getProcessors()).containsExactly(processor1, processor2);
-    assertThat(processor.getProcessors()).isUnmodifiable();
-  }
-
-  @Test
-  void addProcessors_VarArgs() {
-    SeverityBasedLogRecordProcessor processor =
-        SeverityBasedLogRecordProcessor.builder(Severity.INFO)
-            .addProcessors(processor1, processor2)
-            .build();
-
-    assertThat(processor.getProcessors()).containsExactly(processor1, processor2);
-  }
-
-  @Test
-  void addProcessors_Iterable() {
-    SeverityBasedLogRecordProcessor processor =
-        SeverityBasedLogRecordProcessor.builder(Severity.INFO)
-            .addProcessors(Arrays.asList(processor1, processor2))
-            .build();
-
-    assertThat(processor.getProcessors()).containsExactly(processor1, processor2);
-  }
-
-  @Test
   void toString_Valid() {
     SeverityBasedLogRecordProcessor processor =
         SeverityBasedLogRecordProcessor.builder(Severity.WARN).addProcessor(processor1).build();
@@ -272,7 +239,7 @@ class SeverityBasedLogRecordProcessorTest {
     String toString = processor.toString();
     assertThat(toString).contains("SeverityBasedLogRecordProcessor");
     assertThat(toString).contains("minimumSeverity=WARN");
-    assertThat(toString).contains("processors=");
+    assertThat(toString).contains("delegate=");
   }
 
   @Test
