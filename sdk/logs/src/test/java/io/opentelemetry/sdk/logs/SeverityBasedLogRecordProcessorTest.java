@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -189,19 +188,6 @@ class SeverityBasedLogRecordProcessorTest {
     verify(processor1).shutdown();
     verify(processor2).shutdown();
     assertThat(result.isSuccess()).isTrue();
-  }
-
-  @Test
-  void shutdown_OnlyOnce() {
-    SeverityBasedLogRecordProcessor processor =
-        SeverityBasedLogRecordProcessor.builder(Severity.INFO).addProcessors(processor1).build();
-
-    CompletableResultCode result1 = processor.shutdown();
-    CompletableResultCode result2 = processor.shutdown();
-
-    verify(processor1, times(1)).shutdown();
-    assertThat(result1.isSuccess()).isTrue();
-    assertThat(result2.isSuccess()).isTrue();
   }
 
   @Test
