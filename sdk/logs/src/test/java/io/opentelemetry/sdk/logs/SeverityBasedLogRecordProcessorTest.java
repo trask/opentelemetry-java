@@ -224,14 +224,6 @@ class SeverityBasedLogRecordProcessorTest {
   }
 
   @Test
-  void getMinimumSeverity() {
-    SeverityBasedLogRecordProcessor processor =
-        SeverityBasedLogRecordProcessor.builder(Severity.ERROR).addProcessors(processor1).build();
-
-    assertThat(processor.getMinimumSeverity()).isEqualTo(Severity.ERROR);
-  }
-
-  @Test
   void toString_Valid() {
     SeverityBasedLogRecordProcessor processor =
         SeverityBasedLogRecordProcessor.builder(Severity.WARN).addProcessors(processor1).build();

@@ -59,11 +59,6 @@ public final class SeverityBasedLogRecordProcessor implements LogRecordProcessor
     return delegate.forceFlush();
   }
 
-  // only visible for testing
-  Severity getMinimumSeverity() {
-    return minimumSeverity;
-  }
-
   @Override
   public String toString() {
     return "SeverityBasedLogRecordProcessor{"
