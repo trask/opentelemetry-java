@@ -22,87 +22,81 @@ class SeverityBasedLogRecordProcessorComponentProviderTest {
 
   @Test
   void createSeverityBasedProcessor_DirectComponentProvider() {
-    SeverityBasedLogRecordProcessorComponentProvider provider = 
+    SeverityBasedLogRecordProcessorComponentProvider provider =
         new SeverityBasedLogRecordProcessorComponentProvider();
-    
+
     assertThat(provider.getType()).isEqualTo(LogRecordProcessor.class);
     assertThat(provider.getName()).isEqualTo("severity_based");
   }
-  
+
   @Test
   void createSeverityBasedProcessor_ValidConfig() {
-    String yaml = 
-        "minimum_severity: \"WARN\"\n" +
-        "processors:\n" +
-        "  - simple:\n" +
-        "      exporter:\n" +
-        "        console: {}\n";
+    DeclarativeConfigProperties config =
+        getConfig(
+            "minimum_severity: \"WARN\"\n"
+                + "processors:\n"
+                + "  - simple:\n"
+                + "      exporter:\n"
+                + "        console: {}\n");
 
-    Object yamlObj = DeclarativeConfiguration.loadYaml(
-        new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)), 
-        Collections.emptyMap());
-        
-    DeclarativeConfigProperties config = 
-        DeclarativeConfiguration.toConfigProperties(yamlObj, 
-            ComponentLoader.forClassLoader(getClass().getClassLoader()));
-
-    SeverityBasedLogRecordProcessorComponentProvider provider = 
+    SeverityBasedLogRecordProcessorComponentProvider provider =
         new SeverityBasedLogRecordProcessorComponentProvider();
-    
+
     LogRecordProcessor processor = provider.create(config);
 
     assertThat(processor).isInstanceOf(SeverityBasedLogRecordProcessor.class);
-    // Test the minimum severity via toString() since getMinimumSeverity() is package-protected
-    assertThat(processor.toString()).contains("minimumSeverity=WARN");
-    // Note: processors are encapsulated in the delegate and not directly accessible
+
+    assertThat(processor.toString())
+        .contains("minimumSeverity=WARN")
+        .contains("delegate=SimpleLogRecordProcessor")
+        .contains("logRecordExporter=SystemOutLogRecordExporter");
   }
 
   @Test
   void createSeverityBasedProcessor_MissingMinimumSeverity() {
-    String yaml = 
-        "processors:\n" +
-        "  - simple:\n" +
-        "      exporter:\n" +
-        "        console: {}\n";
+    DeclarativeConfigProperties config =
+        getConfig(
+            "processors:\n" // this comment exists only to influence spotless formatting
+                + "  - simple:\n"
+                + "      exporter:\n"
+                + "        console: {}\n");
 
-    Object yamlObj = DeclarativeConfiguration.loadYaml(
-        new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)), 
-        Collections.emptyMap());
-        
-    DeclarativeConfigProperties config = 
-        DeclarativeConfiguration.toConfigProperties(yamlObj, 
-            ComponentLoader.forClassLoader(getClass().getClassLoader()));
-
-    SeverityBasedLogRecordProcessorComponentProvider provider = 
+    SeverityBasedLogRecordProcessorComponentProvider provider =
         new SeverityBasedLogRecordProcessorComponentProvider();
-    
+
     assertThatThrownBy(() -> provider.create(config))
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("minimum_severity is required for severity_based log processor");
+        .hasMessage("minimum_severity is required for severity_based log processors");
   }
 
   @Test
   void createSeverityBasedProcessor_InvalidSeverity() {
-    String yaml = 
-        "minimum_severity: \"INVALID\"\n" +
-        "processors:\n" +
-        "  - simple:\n" +
-        "      exporter:\n" +
-        "        console: {}\n";
 
-    Object yamlObj = DeclarativeConfiguration.loadYaml(
-        new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)), 
-        Collections.emptyMap());
-        
-    DeclarativeConfigProperties config = 
-        DeclarativeConfiguration.toConfigProperties(yamlObj, 
-            ComponentLoader.forClassLoader(getClass().getClassLoader()));
+    DeclarativeConfigProperties config =
+        getConfig(
+            "minimum_severity: \"INVALID\"\n"
+                + "processors:\n"
+                + "  - simple:\n"
+                + "      exporter:\n"
+                + "        console: {}\n");
 
-    SeverityBasedLogRecordProcessorComponentProvider provider = 
+    SeverityBasedLogRecordProcessorComponentProvider provider =
         new SeverityBasedLogRecordProcessorComponentProvider();
-    
+
     assertThatThrownBy(() -> provider.create(config))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("Invalid severity value: INVALID");
+  }
+
+  private static DeclarativeConfigProperties getConfig(String yaml) {
+    Object yamlObj =
+        DeclarativeConfiguration.loadYaml(
+            new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)),
+            Collections.emptyMap());
+
+    return DeclarativeConfiguration.toConfigProperties(
+        yamlObj,
+        ComponentLoader.forClassLoader(
+            SeverityBasedLogRecordProcessorComponentProviderTest.class.getClassLoader()));
   }
 }
