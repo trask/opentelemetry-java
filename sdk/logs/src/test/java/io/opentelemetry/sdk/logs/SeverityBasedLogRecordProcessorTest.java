@@ -150,12 +150,31 @@ class SeverityBasedLogRecordProcessorTest {
         SeverityBasedLogRecordProcessor.builder(Severity.WARN).addProcessors(processor1).build();
 
     // Test all severity levels
+    testSeverityLevel(processor, Severity.UNDEFINED_SEVERITY_NUMBER, /* shouldDelegate= */ false);
     testSeverityLevel(processor, Severity.TRACE, /* shouldDelegate= */ false);
+    testSeverityLevel(processor, Severity.TRACE2, /* shouldDelegate= */ false);
+    testSeverityLevel(processor, Severity.TRACE3, /* shouldDelegate= */ false);
+    testSeverityLevel(processor, Severity.TRACE4, /* shouldDelegate= */ false);
     testSeverityLevel(processor, Severity.DEBUG, /* shouldDelegate= */ false);
+    testSeverityLevel(processor, Severity.DEBUG2, /* shouldDelegate= */ false);
+    testSeverityLevel(processor, Severity.DEBUG3, /* shouldDelegate= */ false);
+    testSeverityLevel(processor, Severity.DEBUG4, /* shouldDelegate= */ false);
     testSeverityLevel(processor, Severity.INFO, /* shouldDelegate= */ false);
+    testSeverityLevel(processor, Severity.INFO2, /* shouldDelegate= */ false);
+    testSeverityLevel(processor, Severity.INFO3, /* shouldDelegate= */ false);
+    testSeverityLevel(processor, Severity.INFO4, /* shouldDelegate= */ false);
     testSeverityLevel(processor, Severity.WARN, /* shouldDelegate= */ true);
+    testSeverityLevel(processor, Severity.WARN2, /* shouldDelegate= */ true);
+    testSeverityLevel(processor, Severity.WARN3, /* shouldDelegate= */ true);
+    testSeverityLevel(processor, Severity.WARN4, /* shouldDelegate= */ true);
     testSeverityLevel(processor, Severity.ERROR, /* shouldDelegate= */ true);
+    testSeverityLevel(processor, Severity.ERROR2, /* shouldDelegate= */ true);
+    testSeverityLevel(processor, Severity.ERROR3, /* shouldDelegate= */ true);
+    testSeverityLevel(processor, Severity.ERROR4, /* shouldDelegate= */ true);
     testSeverityLevel(processor, Severity.FATAL, /* shouldDelegate= */ true);
+    testSeverityLevel(processor, Severity.FATAL2, /* shouldDelegate= */ true);
+    testSeverityLevel(processor, Severity.FATAL3, /* shouldDelegate= */ true);
+    testSeverityLevel(processor, Severity.FATAL4, /* shouldDelegate= */ true);
   }
 
   private void testSeverityLevel(
