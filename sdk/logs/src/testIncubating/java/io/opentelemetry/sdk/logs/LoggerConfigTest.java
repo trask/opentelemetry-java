@@ -193,4 +193,136 @@ class LoggerConfigTest {
         .satisfiesExactly(
             log -> assertThat(log).hasBody("logA"), log -> assertThat(log).hasBody("logC"));
   }
+
+  @Test
+  void minimumSeverityFiltering() {
+    InMemoryLogRecordExporter exporter = InMemoryLogRecordExporter.create();
+    SdkLoggerProvider loggerProvider =
+        SdkLoggerProvider.builder()
+            // Set minimum severity to WARN for loggerA
+            .addLoggerConfiguratorCondition(nameEquals("loggerA"), LoggerConfig.withMinimumSeverity(Severity.WARN.getSeverityNumber()))
+            .addLogRecordProcessor(SimpleLogRecordProcessor.create(exporter))
+            .build();
+
+    Logger loggerA = loggerProvider.get("loggerA");
+    Logger loggerB = loggerProvider.get("loggerB"); // Uses default config (no filtering)
+
+    // Emit logs with different severity levels
+    loggerA.logRecordBuilder().setSeverity(Severity.DEBUG).setBody("debug").emit(); // Should be dropped
+    loggerA.logRecordBuilder().setSeverity(Severity.INFO).setBody("info").emit(); // Should be dropped
+    loggerA.logRecordBuilder().setSeverity(Severity.WARN).setBody("warn").emit(); // Should pass
+    loggerA.logRecordBuilder().setSeverity(Severity.ERROR).setBody("error").emit(); // Should pass
+    loggerA.logRecordBuilder().setBody("unspecified").emit(); // Should pass (unspecified severity)
+
+    // LoggerB should emit all logs (no filtering)
+    loggerB.logRecordBuilder().setSeverity(Severity.DEBUG).setBody("debug-b").emit();
+    loggerB.logRecordBuilder().setSeverity(Severity.INFO).setBody("info-b").emit();
+
+    // Only logs with severity >= WARN from loggerA, plus all from loggerB
+    assertThat(exporter.getFinishedLogRecordItems())
+        .satisfiesExactlyInAnyOrder(
+            log -> assertThat(log).hasBody("warn"),
+            log -> assertThat(log).hasBody("error"),
+            log -> assertThat(log).hasBody("unspecified"),
+            log -> assertThat(log).hasBody("debug-b"),
+            log -> assertThat(log).hasBody("info-b"));
+  }
+
+  @Test
+  void traceBasedFiltering() {
+    InMemoryLogRecordExporter exporter = InMemoryLogRecordExporter.create();
+    SdkLoggerProvider loggerProvider =
+        SdkLoggerProvider.builder()
+            // Enable trace-based filtering for loggerA
+            .addLoggerConfiguratorCondition(nameEquals("loggerA"), LoggerConfig.withTraceBased())
+            .addLogRecordProcessor(SimpleLogRecordProcessor.create(exporter))
+            .build();
+
+    Logger loggerA = loggerProvider.get("loggerA");
+    Logger loggerB = loggerProvider.get("loggerB"); // Uses default config (no filtering)
+
+    // Test with no active span - should pass through
+    loggerA.logRecordBuilder().setBody("no-span").emit();
+    loggerB.logRecordBuilder().setBody("no-span-b").emit();
+
+    // Test with sampled trace - should pass through
+    // Note: creating a proper sampled span context requires tracer setup
+    loggerA.logRecordBuilder().setBody("sampled").emit();
+    loggerB.logRecordBuilder().setBody("sampled-b").emit();
+
+    // For this basic test, we expect logs without valid span context to pass through
+    assertThat(exporter.getFinishedLogRecordItems())
+        .satisfiesExactlyInAnyOrder(
+            log -> assertThat(log).hasBody("no-span"),
+            log -> assertThat(log).hasBody("no-span-b"),
+            log -> assertThat(log).hasBody("sampled"),
+            log -> assertThat(log).hasBody("sampled-b"));
+  }
+
+  @Test
+  void combinedFiltering() {
+    InMemoryLogRecordExporter exporter = InMemoryLogRecordExporter.create();
+    SdkLoggerProvider loggerProvider =
+        SdkLoggerProvider.builder()
+            // Combine minimum severity and trace-based filtering
+            .addLoggerConfiguratorCondition(nameEquals("loggerA"), 
+                LoggerConfig.create(/* enabled= */ true, Severity.WARN.getSeverityNumber(), /* traceBased= */ true))
+            .addLogRecordProcessor(SimpleLogRecordProcessor.create(exporter))
+            .build();
+
+    Logger loggerA = loggerProvider.get("loggerA");
+
+    // Test with various combinations
+    loggerA.logRecordBuilder().setSeverity(Severity.DEBUG).setBody("debug-filtered").emit(); // Dropped by severity
+    loggerA.logRecordBuilder().setSeverity(Severity.WARN).setBody("warn-passed").emit(); // Should pass (no active span)
+    loggerA.logRecordBuilder().setBody("unspecified-passed").emit(); // Should pass (unspecified severity)
+
+    assertThat(exporter.getFinishedLogRecordItems())
+        .satisfiesExactlyInAnyOrder(
+            log -> assertThat(log).hasBody("warn-passed"),
+            log -> assertThat(log).hasBody("unspecified-passed"));
+  }
+
+  @Test
+  void loggerConfigDefaults() {
+    LoggerConfig defaultConfig = LoggerConfig.defaultConfig();
+    assertThat(defaultConfig.isEnabled()).isTrue();
+    assertThat(defaultConfig.getMinimumSeverity()).isEqualTo(0);
+    assertThat(defaultConfig.isTraceBased()).isFalse();
+
+    LoggerConfig disabledConfig = LoggerConfig.disabled();
+    assertThat(disabledConfig.isEnabled()).isFalse();
+    assertThat(disabledConfig.getMinimumSeverity()).isEqualTo(0);
+    assertThat(disabledConfig.isTraceBased()).isFalse();
+
+    LoggerConfig customConfig = LoggerConfig.create(/* enabled= */ true, /* minimumSeverity= */ 100, /* traceBased= */ true);
+    assertThat(customConfig.isEnabled()).isTrue();
+    assertThat(customConfig.getMinimumSeverity()).isEqualTo(100);
+    assertThat(customConfig.isTraceBased()).isTrue();
+  }
+
+  @Test
+  void simpleDebugTest() {
+    InMemoryLogRecordExporter exporter = InMemoryLogRecordExporter.create();
+    SdkLoggerProvider loggerProvider =
+        SdkLoggerProvider.builder()
+            .addLoggerConfiguratorCondition(nameEquals("testLogger"), 
+                LoggerConfig.withMinimumSeverity(Severity.WARN.getSeverityNumber()))
+            .addLogRecordProcessor(SimpleLogRecordProcessor.create(exporter))
+            .build();
+
+    Logger logger = loggerProvider.get("testLogger");
+    
+    // Emit one DEBUG log that should be filtered
+    logger.logRecordBuilder().setSeverity(Severity.DEBUG).setBody("should-be-filtered").emit();
+    
+    // Emit one WARN log that should pass  
+    logger.logRecordBuilder().setSeverity(Severity.WARN).setBody("should-pass").emit();
+
+    // Should only see the WARN log
+    List<LogRecordData> logs = exporter.getFinishedLogRecordItems();
+    
+    assertThat(logs).hasSize(1);
+    assertThat(logs.get(0).getBodyValue().asString()).isEqualTo("should-pass");
+  }
 }

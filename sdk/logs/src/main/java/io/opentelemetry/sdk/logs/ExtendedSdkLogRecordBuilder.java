@@ -25,6 +25,12 @@ final class ExtendedSdkLogRecordBuilder extends SdkLogRecordBuilder
   @Nullable private ExtendedAttributesMap extendedAttributes;
 
   ExtendedSdkLogRecordBuilder(
+      LoggerSharedState loggerSharedState, InstrumentationScopeInfo instrumentationScopeInfo, @Nullable SdkLogger logger) {
+    super(loggerSharedState, instrumentationScopeInfo, logger);
+  }
+
+  // Backward compatible constructor
+  ExtendedSdkLogRecordBuilder(
       LoggerSharedState loggerSharedState, InstrumentationScopeInfo instrumentationScopeInfo) {
     super(loggerSharedState, instrumentationScopeInfo);
   }
@@ -133,6 +139,23 @@ final class ExtendedSdkLogRecordBuilder extends SdkLogRecordBuilder
       return;
     }
     Context context = this.context == null ? Context.current() : this.context;
+
+    // Apply filtering rules if logger is available
+    if (logger != null) {
+      // 1. Check minimum severity level
+      if (severity != Severity.UNDEFINED_SEVERITY_NUMBER && severity.getSeverityNumber() < logger.minimumSeverity) {
+        return;
+      }
+
+      // 2. Check trace-based filtering
+      if (logger.traceBased) {
+        Span span = Span.fromContext(context);
+        if (span.getSpanContext().isValid() && !span.getSpanContext().getTraceFlags().isSampled()) {
+          return;
+        }
+      }
+    }
+
     long observedTimestampEpochNanos =
         this.observedTimestampEpochNanos == 0
             ? this.loggerSharedState.getClock().now()

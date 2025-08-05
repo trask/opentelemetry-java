@@ -30,9 +30,9 @@ import javax.annotation.concurrent.Immutable;
 public abstract class LoggerConfig {
 
   private static final LoggerConfig DEFAULT_CONFIG =
-      new AutoValue_LoggerConfig(/* enabled= */ true);
+      new AutoValue_LoggerConfig(/* enabled= */ true, /* minimumSeverity= */ 0, /* traceBased= */ false);
   private static final LoggerConfig DISABLED_CONFIG =
-      new AutoValue_LoggerConfig(/* enabled= */ false);
+      new AutoValue_LoggerConfig(/* enabled= */ false, /* minimumSeverity= */ 0, /* traceBased= */ false);
 
   /** Returns a disabled {@link LoggerConfig}. */
   public static LoggerConfig disabled() {
@@ -42,6 +42,33 @@ public abstract class LoggerConfig {
   /** Returns an enabled {@link LoggerConfig}. */
   public static LoggerConfig enabled() {
     return DEFAULT_CONFIG;
+  }
+
+  /**
+   * Returns a {@link LoggerConfig} with the specified parameters.
+   *
+   * @param enabled whether the logger is enabled
+   * @param minimumSeverity minimum severity level for log records to be processed (default 0)
+   * @param traceBased whether to only process log records from sampled traces (default false)
+   */
+  public static LoggerConfig create(boolean enabled, int minimumSeverity, boolean traceBased) {
+    return new AutoValue_LoggerConfig(enabled, minimumSeverity, traceBased);
+  }
+
+  /**
+   * Returns a {@link LoggerConfig} with the specified minimum severity level.
+   *
+   * @param minimumSeverity minimum severity level for log records to be processed
+   */
+  public static LoggerConfig withMinimumSeverity(int minimumSeverity) {
+    return create(/* enabled= */ true, minimumSeverity, /* traceBased= */ false);
+  }
+
+  /**
+   * Returns a {@link LoggerConfig} with trace-based filtering enabled.
+   */
+  public static LoggerConfig withTraceBased() {
+    return create(/* enabled= */ true, /* minimumSeverity= */ 0, /* traceBased= */ true);
   }
 
   /**
@@ -64,4 +91,18 @@ public abstract class LoggerConfig {
 
   /** Returns {@code true} if this logger is enabled. Defaults to {@code true}. */
   public abstract boolean isEnabled();
+
+  /**
+   * Returns the minimum severity level for log records to be processed.
+   * Log records with severity below this level are dropped.
+   * Defaults to {@code 0}.
+   */
+  public abstract int getMinimumSeverity();
+
+  /**
+   * Returns {@code true} if this logger should only process log records from sampled traces.
+   * When {@code true}, log records not associated with sampled traces are dropped.
+   * Defaults to {@code false}.
+   */
+  public abstract boolean isTraceBased();
 }
