@@ -22,6 +22,7 @@ class SdkLogRecordBuilder implements LogRecordBuilder {
 
   protected final LoggerSharedState loggerSharedState;
   protected final LogLimits logLimits;
+  @Nullable protected final SdkLogger logger;
 
   protected final InstrumentationScopeInfo instrumentationScopeInfo;
   protected long timestampEpochNanos;
@@ -34,10 +35,17 @@ class SdkLogRecordBuilder implements LogRecordBuilder {
   @Nullable private AttributesMap attributes;
 
   SdkLogRecordBuilder(
-      LoggerSharedState loggerSharedState, InstrumentationScopeInfo instrumentationScopeInfo) {
+      LoggerSharedState loggerSharedState, InstrumentationScopeInfo instrumentationScopeInfo, @Nullable SdkLogger logger) {
     this.loggerSharedState = loggerSharedState;
     this.logLimits = loggerSharedState.getLogLimits();
     this.instrumentationScopeInfo = instrumentationScopeInfo;
+    this.logger = logger;
+  }
+
+  // Backward compatible constructor for existing usages
+  SdkLogRecordBuilder(
+      LoggerSharedState loggerSharedState, InstrumentationScopeInfo instrumentationScopeInfo) {
+    this(loggerSharedState, instrumentationScopeInfo, null);
   }
 
   @Override
@@ -121,6 +129,23 @@ class SdkLogRecordBuilder implements LogRecordBuilder {
       return;
     }
     Context context = this.context == null ? Context.current() : this.context;
+
+    // Apply filtering rules if logger is available
+    if (logger != null) {
+      // 1. Check minimum severity level
+      if (severity != Severity.UNDEFINED_SEVERITY_NUMBER && severity.getSeverityNumber() < logger.minimumSeverity) {
+        return;
+      }
+
+      // 2. Check trace-based filtering
+      if (logger.traceBased) {
+        Span span = Span.fromContext(context);
+        if (span.getSpanContext().isValid() && !span.getSpanContext().getTraceFlags().isSampled()) {
+          return;
+        }
+      }
+    }
+
     long observedTimestampEpochNanos =
         this.observedTimestampEpochNanos == 0
             ? this.loggerSharedState.getClock().now()

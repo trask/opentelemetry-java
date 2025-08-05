@@ -7,6 +7,7 @@ package io.opentelemetry.sdk.logs;
 
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.internal.LoggerConfig;
+import javax.annotation.Nullable;
 
 /**
  * Utilities for interacting with {@code io.opentelemetry:opentelemetry-api-incubator}, which is not
@@ -25,7 +26,7 @@ final class IncubatingUtil {
   }
 
   static SdkLogRecordBuilder createExtendedLogRecordBuilder(
-      LoggerSharedState loggerSharedState, InstrumentationScopeInfo instrumentationScopeInfo) {
-    return new ExtendedSdkLogRecordBuilder(loggerSharedState, instrumentationScopeInfo);
+      LoggerSharedState loggerSharedState, InstrumentationScopeInfo instrumentationScopeInfo, @Nullable SdkLogger logger) {
+    return new ExtendedSdkLogRecordBuilder(loggerSharedState, instrumentationScopeInfo, logger);
   }
 }
