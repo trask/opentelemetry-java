@@ -325,4 +325,40 @@ class LoggerConfigTest {
     assertThat(logs).hasSize(1);
     assertThat(logs.get(0).getBodyValue().asString()).isEqualTo("should-pass");
   }
+
+  @Test
+  void isEnabledConsidersMinimumSeverity() {
+    InMemoryLogRecordExporter exporter = InMemoryLogRecordExporter.create();
+    SdkLoggerProvider loggerProvider =
+        SdkLoggerProvider.builder()
+            .addLoggerConfiguratorCondition(nameEquals("testLogger"), 
+                LoggerConfig.withMinimumSeverity(Severity.WARN.getSeverityNumber()))
+            .addLogRecordProcessor(SimpleLogRecordProcessor.create(exporter))
+            .build();
+
+    ExtendedSdkLogger logger = (ExtendedSdkLogger) loggerProvider.get("testLogger");
+    
+    // Test isEnabled method with different severity levels
+    assertThat(logger.isEnabled(Severity.DEBUG, Context.current())).isFalse();
+    assertThat(logger.isEnabled(Severity.INFO, Context.current())).isFalse();
+    assertThat(logger.isEnabled(Severity.WARN, Context.current())).isTrue();
+    assertThat(logger.isEnabled(Severity.ERROR, Context.current())).isTrue();
+    assertThat(logger.isEnabled(Severity.UNDEFINED_SEVERITY_NUMBER, Context.current())).isTrue(); // unspecified should pass
+  }
+
+  @Test
+  void isEnabledConsidersTraceBased() {
+    InMemoryLogRecordExporter exporter = InMemoryLogRecordExporter.create();
+    SdkLoggerProvider loggerProvider =
+        SdkLoggerProvider.builder()
+            .addLoggerConfiguratorCondition(nameEquals("testLogger"), 
+                LoggerConfig.withTraceBased())
+            .addLogRecordProcessor(SimpleLogRecordProcessor.create(exporter))
+            .build();
+
+    ExtendedSdkLogger logger = (ExtendedSdkLogger) loggerProvider.get("testLogger");
+    
+    // Test isEnabled method with no active span (should return true - no valid span context)
+    assertThat(logger.isEnabled(Severity.INFO, Context.current())).isTrue();
+  }
 }
