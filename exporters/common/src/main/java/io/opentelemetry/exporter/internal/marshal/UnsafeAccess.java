@@ -18,17 +18,17 @@ class UnsafeAccess {
     // If we prefer VarHandle and it's available, don't use Unsafe
     return !preferVarHandle && available;
   }
-  
+
   static boolean shouldUseVarHandle() {
     return preferVarHandle && VarHandleString.isAvailable();
   }
 
   private static boolean shouldPreferVarHandle() {
     double javaVersion = getJavaVersion();
-    
+
     // For Java 22+, prefer VarHandle over Unsafe to avoid warnings and future breakage
     boolean defaultPreferVarHandle = javaVersion != -1 && javaVersion >= 22;
-    
+
     return Boolean.parseBoolean(
         ConfigUtil.getString(
             "otel.java.experimental.exporter.varhandle.enabled",

@@ -12,7 +12,7 @@ class UnsafeString {
   private static final long coderOffset = getStringFieldOffset("coder", byte.class);
   private static final int byteArrayBaseOffset =
       UnsafeAccess.isAvailable() ? UnsafeAccess.arrayBaseOffset(byte[].class) : -1;
-  private static final boolean available = 
+  private static final boolean available =
       (valueOffset != -1 && coderOffset != -1) || VarHandleString.isAvailable();
 
   static boolean isAvailable() {
@@ -24,13 +24,13 @@ class UnsafeString {
     if (UnsafeAccess.shouldUseVarHandle()) {
       return VarHandleString.isLatin1(string);
     }
-    
+
     // Fallback to Unsafe if available
     if (UnsafeAccess.isAvailable() && coderOffset != -1) {
       // 0 represents latin1, 1 utf16
       return UnsafeAccess.getByte(string, coderOffset) == 0;
     }
-    
+
     return false;
   }
 
@@ -40,12 +40,12 @@ class UnsafeString {
     if (UnsafeAccess.shouldUseVarHandle()) {
       return VarHandleString.getBytes(string);
     }
-    
+
     // Fallback to Unsafe if available
     if (UnsafeAccess.isAvailable() && valueOffset != -1) {
       return (byte[]) UnsafeAccess.getObject(string, valueOffset);
     }
-    
+
     return null;
   }
 
@@ -54,12 +54,12 @@ class UnsafeString {
     if (UnsafeAccess.shouldUseVarHandle()) {
       return VarHandleString.getLong(bytes, index);
     }
-    
+
     // Fallback to Unsafe if available
     if (UnsafeAccess.isAvailable() && byteArrayBaseOffset != -1) {
       return UnsafeAccess.getLong(bytes, byteArrayBaseOffset + index);
     }
-    
+
     return 0L;
   }
 

@@ -19,22 +19,22 @@ class VarHandleStringTest {
     // We just verify it returns a boolean without throwing
     assertThat(available).isIn(true, false);
   }
-  
-  @Test 
+
+  @Test
   void testBasicFunctionality() {
     if (VarHandleString.isAvailable()) {
       String testString = "test";
-      
+
       // Test getting bytes
       byte[] bytes = VarHandleString.getBytes(testString);
       assertThat(bytes).isNotNull();
       assertThat(bytes.length).isGreaterThan(0);
-      
-      // Test encoding detection - these might not always work depending on the internal 
+
+      // Test encoding detection - these might not always work depending on the internal
       // String representation, but they shouldn't throw exceptions
       String asciiString = "hello";
       String unicodeString = "héllo";
-      
+
       try {
         boolean asciiIsLatin1 = VarHandleString.isLatin1(asciiString);
         boolean unicodeIsLatin1 = VarHandleString.isLatin1(unicodeString);
@@ -44,7 +44,7 @@ class VarHandleStringTest {
       } catch (RuntimeException e) {
         // This is OK - the internal String representation might not be what we expect
       }
-      
+
       // Test getLong - this should work without throwing
       if (bytes.length >= 8) {
         long value = VarHandleString.getLong(bytes, 0);
@@ -58,18 +58,18 @@ class VarHandleStringTest {
   void testUnsafeStringIntegration() {
     // This test verifies that UnsafeString properly works with or without VarHandle
     String testString = "integration test";
-    
-    // Test basic availability 
+
+    // Test basic availability
     boolean unsafeStringAvailable = UnsafeString.isAvailable();
     assertThat(unsafeStringAvailable).isIn(true, false);
-    
+
     if (unsafeStringAvailable) {
       // Test getting bytes
       byte[] bytes = UnsafeString.getBytes(testString);
       if (bytes != null) {
         assertThat(bytes.length).isGreaterThan(0);
       }
-      
+
       // Test encoding detection
       try {
         boolean isLatin1 = UnsafeString.isLatin1(testString);
@@ -79,16 +79,16 @@ class VarHandleStringTest {
       }
     }
   }
-  
+
   @Test
   void testConfiguration() {
     // Test that the configuration methods work
     boolean shouldUseVarHandle = UnsafeAccess.shouldUseVarHandle();
     boolean unsafeAvailable = UnsafeAccess.isAvailable();
-    
+
     assertThat(shouldUseVarHandle).isIn(true, false);
     assertThat(unsafeAvailable).isIn(true, false);
-    
+
     // Verify that if we should use VarHandle, then Unsafe is not considered available
     // (they are mutually exclusive in our implementation)
     if (shouldUseVarHandle && VarHandleString.isAvailable()) {
