@@ -81,6 +81,31 @@ tasks {
   }
 }
 
+// Configure Multi-Release JAR support
+val java9SourceSet = sourceSets.create("java9") {
+  java {
+    srcDirs("src/main/java9")
+  }
+}
+
+tasks.named<JavaCompile>("compileJava9Java") {
+  source = java9SourceSet.java
+  classpath = sourceSets.main.get().compileClasspath
+  destinationDirectory = layout.buildDirectory.dir("classes/java9/main")
+
+  options.release = 9
+}
+
+tasks.jar {
+  dependsOn("compileJava9Java")
+  into("META-INF/versions/9") {
+    from(layout.buildDirectory.dir("classes/java9/main"))
+  }
+  manifest.attributes(
+    "Multi-Release" to "true"
+  )
+}
+
 afterEvaluate {
   tasks.named<JavaCompile>("compileTestHttpSenderProviderJava") {
     options.release.set(11)
