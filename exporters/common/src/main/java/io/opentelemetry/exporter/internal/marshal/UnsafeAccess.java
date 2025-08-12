@@ -12,27 +12,15 @@ import sun.misc.Unsafe;
 class UnsafeAccess {
   private static final int MAX_ENABLED_JAVA_VERSION = 22;
   private static final boolean available = checkUnsafe();
-  private static final boolean preferVarHandle = shouldPreferVarHandle();
 
   static boolean isAvailable() {
-    // If we prefer VarHandle and it's available, don't use Unsafe
-    return !preferVarHandle && available;
+    return available;
   }
 
   static boolean shouldUseVarHandle() {
-    return preferVarHandle && VarHandleString.isAvailable();
-  }
-
-  private static boolean shouldPreferVarHandle() {
-    double javaVersion = getJavaVersion();
-
-    // For Java 22+, prefer VarHandle over Unsafe to avoid warnings and future breakage
-    boolean defaultPreferVarHandle = javaVersion != -1 && javaVersion >= 22;
-
-    return Boolean.parseBoolean(
-        ConfigUtil.getString(
-            "otel.java.experimental.exporter.varhandle.enabled",
-            Boolean.toString(defaultPreferVarHandle)));
+    // VarHandle preference is now handled automatically by multijar UnsafeString
+    // This method is kept for backward compatibility but is no longer used
+    return false;
   }
 
   private static boolean checkUnsafe() {

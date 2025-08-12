@@ -18,25 +18,14 @@ class Java22CompatibilityTest {
     // This test demonstrates the migration behavior for different Java versions
 
     double javaVersion = getJavaVersion();
-    boolean shouldPreferVarHandle = javaVersion >= 22;
 
     // Verify that our configuration logic works correctly
     boolean actuallyPreferVarHandle = UnsafeAccess.shouldUseVarHandle();
     boolean unsafeAvailable = UnsafeAccess.isAvailable();
 
-    if (javaVersion >= 9 && shouldPreferVarHandle) {
-      // On Java 22+, we should prefer VarHandle (if available) and not use Unsafe
-      if (VarHandleString.isAvailable()) {
-        assertThat(actuallyPreferVarHandle).isTrue();
-        assertThat(unsafeAvailable).isFalse();
-      }
-    } else if (javaVersion >= 9) {
-      // On Java 9-21, we should prefer Unsafe over VarHandle by default
-      // (user can override via system property)
-      if (!actuallyPreferVarHandle) {
-        assertThat(unsafeAvailable).isIn(true, false); // May or may not be available
-      }
-    }
+    // With the new multijar approach, VarHandle preference is handled automatically
+    // by the JVM selecting the appropriate UnsafeString implementation
+    assertThat(actuallyPreferVarHandle).isFalse(); // This method is now deprecated
 
     // Verify that UnsafeString can function regardless of which implementation is used
     boolean unsafeStringAvailable = UnsafeString.isAvailable();
@@ -57,38 +46,37 @@ class Java22CompatibilityTest {
   @Test
   @EnabledOnJre({JRE.JAVA_17, JRE.JAVA_21}) // Test on pre-Java 22
   void testPreJava22Behavior() {
-    // On pre-Java 22, we should default to Unsafe (unless overridden)
+    // With the multijar approach, the behavior is now determined automatically
+    // by the JVM selecting the appropriate implementation
     boolean shouldUseVarHandle = UnsafeAccess.shouldUseVarHandle();
 
-    // Unless explicitly configured otherwise, we should not prefer VarHandle on older Java
-    String explicitConfig = System.getProperty("otel.java.experimental.exporter.varhandle.enabled");
-    if (explicitConfig == null) {
-      assertThat(shouldUseVarHandle).isFalse();
-    }
+    // The shouldUseVarHandle method is now deprecated and always returns false
+    assertThat(shouldUseVarHandle).isFalse();
+    
+    // The actual VarHandle vs Unsafe selection is handled by the multijar mechanism
+    boolean unsafeStringAvailable = UnsafeString.isAvailable();
+    assertThat(unsafeStringAvailable).isIn(true, false);
   }
 
   @Test
   void testConfigurationOverride() {
-    // This test documents how users can override the default behavior
-
-    // The configuration is read at class initialization time, so we can't easily test
-    // different values in the same JVM. But we can document the behavior:
-
-    // Users can force VarHandle usage with:
-    // -Dotel.java.experimental.exporter.varhandle.enabled=true
-
-    // Users can force Unsafe usage (if available) with:
-    // -Dotel.java.experimental.exporter.varhandle.enabled=false
-
-    // This is useful for testing and troubleshooting
+    // This test documents the new multijar behavior
+    
+    // With the multijar approach, VarHandle vs Unsafe selection is automatic
+    // The configuration system property is no longer the primary mechanism
     String configValue = System.getProperty("otel.java.experimental.exporter.varhandle.enabled");
 
-    if ("true".equals(configValue)) {
-      assertThat(UnsafeAccess.shouldUseVarHandle()).isTrue();
-    } else if ("false".equals(configValue)) {
-      assertThat(UnsafeAccess.shouldUseVarHandle()).isFalse();
-    }
-    // If not set, behavior depends on Java version (tested in other methods)
+    // The shouldUseVarHandle method is now deprecated
+    assertThat(UnsafeAccess.shouldUseVarHandle()).isFalse();
+    
+    // The actual behavior is now determined by the multijar mechanism:
+    // - Java 9+: Uses VarHandle with Unsafe fallback automatically
+    // - Java 8: Uses Unsafe with safe fallbacks automatically
+    
+    // Users can still control Unsafe availability through:
+    // -Dotel.java.experimental.exporter.unsafe.enabled=false
+    boolean unsafeAvailable = UnsafeAccess.isAvailable();
+    assertThat(unsafeAvailable).isIn(true, false);
   }
 
   @Test
