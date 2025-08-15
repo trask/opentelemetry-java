@@ -94,5 +94,18 @@
       ],
       depNameTemplate: 'java',
     },
+    {
+      customType: 'regex',
+      datasourceTemplate: 'github-releases',
+      packageNameTemplate: 'open-telemetry/opentelemetry-collector-releases',
+      managerFilePatterns: [
+        '**/*.java'
+      ],
+      matchStrings: [
+        '(?<depName>otel/opentelemetry-collector-contrib):(?<currentValue>[^@"]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?(?=.*// renovate)',
+      ],
+      autoReplaceStringTemplate: '{{depName}}:{{newValue}}{{#if newDigest}}@{{newDigest}}{{/if}}',
+      versioningTemplate: 'docker',
+    },
   ],
 }
