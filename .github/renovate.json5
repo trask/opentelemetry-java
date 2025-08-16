@@ -4,6 +4,8 @@
     'config:best-practices',
     'helpers:pinGitHubActionDigestsToSemver',
   ],
+  ignorePaths: [], // overwrite default ignore which includes **/test/**
+                   // used to update docker image versions used in Java test files
   packageRules: [
     {
       // this is to reduce the number of renovate PRs
