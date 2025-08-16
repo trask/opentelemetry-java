@@ -96,8 +96,7 @@
     },
     {
       customType: 'regex',
-      datasourceTemplate: 'github-releases',
-      packageNameTemplate: 'open-telemetry/opentelemetry-collector-releases',
+      datasourceTemplate: 'docker',
       managerFilePatterns: [
         '**/*.java'
       ],
