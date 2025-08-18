@@ -17,6 +17,12 @@ class UnsafeAccess {
     return available;
   }
 
+  static boolean shouldUseVarHandle() {
+    // VarHandle preference is now handled automatically by multijar UnsafeString
+    // This method is kept for backward compatibility but is no longer used
+    return false;
+  }
+
   private static boolean checkUnsafe() {
     double javaVersion = getJavaVersion();
     boolean unsafeEnabled =

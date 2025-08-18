@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: io.opentelemetry.exporter.internal
+Built-By: runner
+Built-JDK: 17.0.16
+Implementation-Title: common
+Implementation-Version: 1.54.0-SNAPSHOT
+Multi-Release: true
+
