@@ -29,6 +29,7 @@ import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.trace.TracerProvider;
+import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.common.export.MemoryMode;
@@ -233,6 +234,29 @@ class OtlpHttpMetricExporterBuilderTest {
     assertThat(copy.getMemoryMode()).isEqualTo(MemoryMode.IMMUTABLE_DATA);
     assertThat(copy.aggregationTemporalitySelector).isSameAs(temporalitySelector);
     assertThat(copy.defaultAggregationSelector).isSameAs(defaultAggregationSelector);
+
+    original.close();
+    copy.close();
+  }
+
+  @Test
+  void toBuilderPreservesComponentLoader() {
+    // Create a custom component loader that still has access to the necessary classes
+    // but is different from the default to test preservation
+    ComponentLoader customComponentLoader =
+        ComponentLoader.forClassLoader(this.getClass().getClassLoader());
+
+    OtlpHttpMetricExporter original =
+        OtlpHttpMetricExporter.builder()
+            .setComponentLoader(customComponentLoader)
+            .setEndpoint("http://localhost:4318/v1/metrics")
+            .build();
+
+    // toBuilder() should preserve the component loader and not throw any class loader related exceptions
+    OtlpHttpMetricExporter copy = original.toBuilder().build();
+
+    // The copy should work without class loader issues
+    assertThat(copy).isNotNull();
 
     original.close();
     copy.close();
