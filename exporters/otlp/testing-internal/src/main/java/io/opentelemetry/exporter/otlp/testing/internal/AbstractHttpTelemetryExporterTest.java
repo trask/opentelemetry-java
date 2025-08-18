@@ -27,6 +27,7 @@ import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.testing.junit5.server.SelfSignedCertificateExtension;
 import com.linecorp.armeria.testing.junit5.server.ServerExtension;
 import io.github.netmikey.logunit.api.LogCapturer;
+import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.exporter.internal.FailedExportException;
 import io.opentelemetry.exporter.internal.TlsUtil;
 import io.opentelemetry.exporter.internal.compression.GzipCompressor;
@@ -56,6 +57,7 @@ import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.cert.CertificateEncodingException;
@@ -821,6 +823,10 @@ public abstract class AbstractHttpTelemetryExporterTest<T, U extends Message> {
           IOException,
           NoSuchFieldException,
           IllegalAccessException {
+    // Create a custom ComponentLoader to test that it's properly copied
+    ComponentLoader customComponentLoader =
+        ComponentLoader.forClassLoader(new URLClassLoader(new URL[0], null));
+    
     try (TelemetryExporter<T> exporter =
         exporterBuilder()
             .setTimeout(Duration.ofSeconds(5))
@@ -839,6 +845,7 @@ public abstract class AbstractHttpTelemetryExporterTest<T, U extends Message> {
                     .setInitialBackoff(Duration.ofMillis(50))
                     .setBackoffMultiplier(1.3)
                     .build())
+            .setComponentLoader(customComponentLoader)
             .build()) {
       Object unwrapped = exporter.unwrap();
       Field builderField = unwrapped.getClass().getDeclaredField("builder");
