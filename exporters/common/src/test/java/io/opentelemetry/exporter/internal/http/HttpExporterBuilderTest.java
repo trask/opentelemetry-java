@@ -102,16 +102,4 @@ class HttpExporterBuilderTest {
 
     assertThat(copiedBuilder).extracting("componentLoader").isEqualTo(customComponentLoader);
   }
-
-  @Test
-  void copy_preservesExecutorService() {
-    java.util.concurrent.ExecutorService customExecutorService = 
-        java.util.concurrent.Executors.newSingleThreadExecutor();
-    builder.setExecutorService(customExecutorService);
-
-    HttpExporterBuilder<Marshaler> copiedBuilder = builder.copy();
-
-    assertThat(copiedBuilder).extracting("executorService").isEqualTo(customExecutorService);
-    customExecutorService.shutdown();
-  }
 }
