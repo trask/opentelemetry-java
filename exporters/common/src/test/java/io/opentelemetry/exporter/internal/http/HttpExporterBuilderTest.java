@@ -91,4 +91,27 @@ class HttpExporterBuilderTest {
     builder.setCompression("none");
     assertThat(builder).extracting("compressor").isNull();
   }
+
+  @Test
+  void copy_preservesComponentLoader() {
+    ComponentLoader customComponentLoader =
+        ComponentLoader.forClassLoader(new URLClassLoader(new URL[0], null));
+    builder.setComponentLoader(customComponentLoader);
+
+    HttpExporterBuilder<Marshaler> copiedBuilder = builder.copy();
+
+    assertThat(copiedBuilder).extracting("componentLoader").isEqualTo(customComponentLoader);
+  }
+
+  @Test
+  void copy_preservesExecutorService() {
+    java.util.concurrent.ExecutorService customExecutorService = 
+        java.util.concurrent.Executors.newSingleThreadExecutor();
+    builder.setExecutorService(customExecutorService);
+
+    HttpExporterBuilder<Marshaler> copiedBuilder = builder.copy();
+
+    assertThat(copiedBuilder).extracting("executorService").isEqualTo(customExecutorService);
+    customExecutorService.shutdown();
+  }
 }
