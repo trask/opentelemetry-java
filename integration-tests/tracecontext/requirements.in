@@ -1,0 +1,2 @@
+setuptools
+aiohttp>=3.11.0
