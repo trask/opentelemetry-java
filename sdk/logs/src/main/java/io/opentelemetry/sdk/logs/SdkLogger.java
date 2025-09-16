@@ -11,6 +11,7 @@ import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import io.opentelemetry.sdk.logs.internal.EventuallyVisibleBoolean;
 import io.opentelemetry.sdk.logs.internal.LoggerConfig;
 
 /** SDK implementation of {@link Logger}. */
@@ -33,9 +34,7 @@ class SdkLogger implements Logger {
   private final LoggerSharedState loggerSharedState;
   private final InstrumentationScopeInfo instrumentationScopeInfo;
 
-  // deliberately not volatile because of performance concerns
-  // - which means its eventually consistent
-  protected boolean loggerEnabled;
+  protected final EventuallyVisibleBoolean loggerEnabled;
 
   SdkLogger(
       LoggerSharedState loggerSharedState,
@@ -43,7 +42,7 @@ class SdkLogger implements Logger {
       LoggerConfig loggerConfig) {
     this.loggerSharedState = loggerSharedState;
     this.instrumentationScopeInfo = instrumentationScopeInfo;
-    this.loggerEnabled = loggerConfig.isEnabled();
+    this.loggerEnabled = new EventuallyVisibleBoolean(loggerConfig.isEnabled());
   }
 
   static SdkLogger create(
@@ -57,7 +56,7 @@ class SdkLogger implements Logger {
 
   @Override
   public LogRecordBuilder logRecordBuilder() {
-    if (loggerEnabled) {
+    if (isEnabledInternal()) {
       return INCUBATOR_AVAILABLE
           ? IncubatingUtil.createExtendedLogRecordBuilder(
               loggerSharedState, instrumentationScopeInfo)
@@ -73,10 +72,20 @@ class SdkLogger implements Logger {
 
   // Visible for testing
   public boolean isEnabled(Severity severity, Context context) {
-    return loggerEnabled;
+    return isEnabledInternal();
+  }
+
+  /**
+   * Internal method for checking if logger is enabled. Uses the EventuallyVisibleBoolean which
+   * provides eventual visibility of configuration changes with optimized performance.
+   */
+  protected boolean isEnabledInternal() {
+    return loggerEnabled.get();
   }
 
   void updateLoggerConfig(LoggerConfig loggerConfig) {
-    loggerEnabled = loggerConfig.isEnabled();
+    boolean newEnabled = loggerConfig.isEnabled();
+    // Update the EventuallyVisibleBoolean state
+    loggerEnabled.set(newEnabled);
   }
 }

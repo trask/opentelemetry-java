@@ -29,7 +29,9 @@ import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.internal.LoggerConfig;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
@@ -147,5 +149,84 @@ class SdkLoggerTest {
     assertThat(logger.isEnabled(Severity.UNDEFINED_SEVERITY_NUMBER, Context.current())).isFalse();
     logger.updateLoggerConfig(LoggerConfig.enabled());
     assertThat(logger.isEnabled(Severity.UNDEFINED_SEVERITY_NUMBER, Context.current())).isTrue();
+  }
+
+  @Test
+  void eventualVisibility_singleThread() {
+    LogRecordProcessor logRecordProcessor = mock(LogRecordProcessor.class);
+    SdkLoggerProvider loggerProvider =
+        SdkLoggerProvider.builder().addLogRecordProcessor(logRecordProcessor).build();
+    SdkLogger logger = (SdkLogger) loggerProvider.get("test");
+
+    // Initially enabled
+    assertThat(logger.isEnabled(Severity.INFO, Context.current())).isTrue();
+
+    // Change configuration
+    logger.updateLoggerConfig(LoggerConfig.disabled());
+
+    // Should see change immediately in same thread
+    assertThat(logger.isEnabled(Severity.INFO, Context.current())).isFalse();
+
+    // Enable again
+    logger.updateLoggerConfig(LoggerConfig.enabled());
+    assertThat(logger.isEnabled(Severity.INFO, Context.current())).isTrue();
+  }
+
+  @Test
+  void eventualVisibility_multiThread() throws Exception {
+    LogRecordProcessor logRecordProcessor = mock(LogRecordProcessor.class);
+    SdkLoggerProvider loggerProvider =
+        SdkLoggerProvider.builder().addLogRecordProcessor(logRecordProcessor).build();
+    SdkLogger logger = (SdkLogger) loggerProvider.get("test");
+
+    AtomicBoolean writerFinished = new AtomicBoolean(false);
+    AtomicBoolean readerSawChange = new AtomicBoolean(false);
+    CountDownLatch startLatch = new CountDownLatch(1);
+
+    // Reader thread - should eventually see the change
+    Thread readerThread =
+        new Thread(
+            () -> {
+              try {
+                startLatch.await();
+
+                // Keep reading until we see the change or writer finishes
+                while (!writerFinished.get()) {
+                  if (!logger.isEnabled(Severity.INFO, Context.current())) {
+                    readerSawChange.set(true);
+                    break;
+                  }
+                  // Small pause to allow other thread to run
+                  try {
+                    Thread.sleep(1);
+                  } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                  }
+                }
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+              }
+            });
+
+    readerThread.start();
+    startLatch.countDown();
+
+    // Small delay to let reader start
+    Thread.sleep(10);
+
+    // Writer thread - disable logger
+    logger.updateLoggerConfig(LoggerConfig.disabled());
+
+    // Give some time for eventual visibility
+    Thread.sleep(100);
+    writerFinished.set(true);
+
+    readerThread.join(1000);
+
+    // Reader should have eventually seen the change
+    assertThat(readerSawChange.get())
+        .as("Reader thread should eventually see enablement change")
+        .isTrue();
   }
 }
