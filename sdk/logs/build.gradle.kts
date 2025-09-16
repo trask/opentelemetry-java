@@ -9,8 +9,6 @@ plugins {
 description = "OpenTelemetry Log SDK"
 otelJava.moduleName.set("io.opentelemetry.sdk.logs")
 
-// Multi-Release JAR configuration for Java 9+ VarHandle optimizations
-// The EventuallyVisibleBoolean class uses VarHandle for better performance on Java 9+
 sourceSets {
   create("java9") {
     java {
@@ -32,6 +30,18 @@ tasks {
     manifest.attributes(
       "Multi-Release" to "true"
     )
+  }
+
+  // Configure JMH jar to inherit multi-release structure from main jar
+  named<Jar>("jmhJar") {
+    val mainJar = jar.get()
+    dependsOn(mainJar)
+
+    // Inherit manifest attributes and multi-release structure
+    manifest.attributes(mainJar.manifest.attributes)
+    from(sourceSets["java9"].output) {
+      into("META-INF/versions/9")
+    }
   }
 }
 

@@ -72,20 +72,10 @@ class SdkLogger implements Logger {
 
   // Visible for testing
   public boolean isEnabled(Severity severity, Context context) {
-    return isEnabledInternal();
-  }
-
-  /**
-   * Internal method for checking if logger is enabled. Uses the EventuallyVisibleBoolean which
-   * provides eventual visibility of configuration changes with optimized performance.
-   */
-  protected boolean isEnabledInternal() {
     return loggerEnabled.get();
   }
 
   void updateLoggerConfig(LoggerConfig loggerConfig) {
-    boolean newEnabled = loggerConfig.isEnabled();
-    // Update the EventuallyVisibleBoolean state
-    loggerEnabled.set(newEnabled);
+    loggerEnabled.set(loggerConfig.isEnabled());
   }
 }

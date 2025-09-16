@@ -27,6 +27,17 @@ jmh {
   if (jmhIncludeSingleClass != null) {
     includes.add(jmhIncludeSingleClass as String)
   }
+  
+  // Configure JMH to use specified Java version
+  val jmhJavaVersion = gradle.startParameter.projectProperties.get("jmhJavaVersion")?.let(JavaVersion::toVersion)
+  if (jmhJavaVersion != null) {
+    val javaExecutable = javaToolchains.launcherFor {
+      languageVersion.set(JavaLanguageVersion.of(jmhJavaVersion.majorVersion))
+    }.get().executablePath.asFile.absolutePath
+    
+    // Use the 'jvm' property to specify the Java executable
+    jvm.set(javaExecutable)
+  }
 }
 
 jmhReport {

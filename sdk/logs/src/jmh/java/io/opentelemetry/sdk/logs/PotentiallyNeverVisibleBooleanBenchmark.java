@@ -5,7 +5,6 @@
 
 package io.opentelemetry.sdk.logs;
 
-import io.opentelemetry.sdk.logs.internal.EventuallyVisibleBoolean;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -26,13 +25,13 @@ import org.openjdk.jmh.annotations.Warmup;
 @Measurement(iterations = 10, time = 1)
 @Fork(1)
 @State(Scope.Benchmark)
-public class EventuallyVisibleBooleanBenchmark {
+public class PotentiallyNeverVisibleBooleanBenchmark {
 
-  private EventuallyVisibleBoolean state;
+  private PotentiallyNeverVisibleBoolean state;
 
   @Setup(Level.Trial)
   public void setup() {
-    state = new EventuallyVisibleBoolean(false);
+    state = new PotentiallyNeverVisibleBoolean(false);
   }
 
   @Benchmark
