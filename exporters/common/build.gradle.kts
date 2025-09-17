@@ -121,6 +121,12 @@ tasks {
   check {
     dependsOn(testing.suites)
   }
+  
+  // Add JVM arguments for tests to enable VarHandle access to String internals
+  // Note: Must use ALL-UNNAMED because tests run in the unnamed module context
+  withType<Test> {
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  }
 }
 
 afterEvaluate {

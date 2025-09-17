@@ -5,10 +5,6 @@
 
 package io.opentelemetry.exporter.internal.marshal;
 
-import static io.opentelemetry.exporter.internal.marshal.StringEncoderConstants.MAX_INNER_LOOP_SIZE;
-import static io.opentelemetry.exporter.internal.marshal.StringEncoderConstants.NEGATIVE_BYTE_MASK;
-
-import java.io.IOException;
 import java.lang.reflect.Field;
 import javax.annotation.Nullable;
 import sun.misc.Unsafe;
@@ -23,9 +19,7 @@ import sun.misc.Unsafe;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-final class UnsafeStringEncoder implements StringEncoder {
-
-  private static final FallbackStringEncoder fallback = new FallbackStringEncoder();
+final class UnsafeStringEncoder extends AbstractStringEncoder {
 
   // Field offsets for direct memory access
   private final long valueOffset;
@@ -39,7 +33,7 @@ final class UnsafeStringEncoder implements StringEncoder {
   }
 
   @Nullable
-  static UnsafeStringEncoder createIfAvailable() {
+  public static UnsafeStringEncoder createIfAvailable() {
     try {
       if (UnsafeHolder.UNSAFE == null) {
         return null;
@@ -61,44 +55,8 @@ final class UnsafeStringEncoder implements StringEncoder {
   }
 
   @Override
-  public int getUtf8Size(String string) {
-    // Latin1 bytes with negative value are encoded as 2 bytes in UTF-8
-    if (isLatin1(string)) {
-      byte[] bytes = getBytes(string);
-      if (bytes != null) {
-        return string.length() + countNegative(bytes);
-      }
-    }
-
-    // Fallback to standard UTF-8 size calculation
-    return fallback.getUtf8Size(string);
-  }
-
-  @Override
-  public void writeUtf8(CodedOutputStream output, String string, int utf8Length)
-      throws IOException {
-    if (string.length() == utf8Length && isLatin1(string)) {
-      byte[] bytes = getBytes(string);
-      if (bytes != null) {
-        output.write(bytes, 0, bytes.length);
-        return;
-      }
-    }
-
-    // Fallback to standard UTF-8 encoding
-    fallback.writeUtf8(output, string, utf8Length);
-  }
-
-  private boolean isLatin1(String string) {
-    try {
-      return UnsafeHolder.UNSAFE.getByte(string, coderOffset) == 0;
-    } catch (RuntimeException e) {
-      return false;
-    }
-  }
-
   @Nullable
-  private byte[] getBytes(String string) {
+  protected byte[] getStringBytes(String string) {
     try {
       return (byte[]) UnsafeHolder.UNSAFE.getObject(string, valueOffset);
     } catch (RuntimeException e) {
@@ -106,38 +64,18 @@ final class UnsafeStringEncoder implements StringEncoder {
     }
   }
 
-  private long getLong(byte[] bytes, int index) {
-    return UnsafeHolder.UNSAFE.getLong(bytes, byteArrayBaseOffset + index);
+  @Override
+  protected boolean isLatin1(String string) {
+    try {
+      return UnsafeHolder.UNSAFE.getByte(string, coderOffset) == 0;
+    } catch (RuntimeException e) {
+      return false;
+    }
   }
 
-  /** Returns the count of bytes with negative value. */
-  private int countNegative(byte[] bytes) {
-    int count = 0;
-    int offset = 0;
-
-    // Process 8 bytes at a time for performance
-    for (int i = 1; i <= bytes.length / MAX_INNER_LOOP_SIZE + 1; i++) {
-      int limit = Math.min((int) (i * MAX_INNER_LOOP_SIZE), bytes.length & ~7);
-      for (; offset < limit; offset += 8) {
-        long value = getLong(bytes, offset);
-        long tmp = value & NEGATIVE_BYTE_MASK;
-        if (tmp != 0) {
-          for (int j = 0; j < 8; j++) {
-            if ((tmp & 0x80) != 0) {
-              count++;
-            }
-            tmp = tmp >>> 8;
-          }
-        }
-      }
-    }
-
-    // Process remaining bytes
-    for (int i = offset; i < bytes.length; i++) {
-      count += bytes[i] >>> 31;
-    }
-
-    return count;
+  @Override
+  protected long getLong(byte[] bytes, int offset) {
+    return UnsafeHolder.UNSAFE.getLong(bytes, byteArrayBaseOffset + offset);
   }
 
   private static long getStringFieldOffset(String fieldName, Class<?> expectedType) {
