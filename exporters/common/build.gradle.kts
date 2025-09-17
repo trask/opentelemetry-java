@@ -8,6 +8,48 @@ plugins {
 description = "OpenTelemetry Exporter Common"
 otelJava.moduleName.set("io.opentelemetry.exporter.internal")
 
+// Configure multi-release JAR
+java {
+  sourceSets {
+    create("java9") {
+      java {
+        srcDir("src/main/java9")
+      }
+      // Make java9 source set depend on main source set
+      compileClasspath += sourceSets.main.get().output + sourceSets.main.get().compileClasspath
+      runtimeClasspath += sourceSets.main.get().output + sourceSets.main.get().runtimeClasspath
+    }
+  }
+}
+
+// Configure java9 compilation to see main source classes
+sourceSets.named("java9") {
+  compileClasspath += sourceSets.main.get().output
+}
+
+tasks.named<JavaCompile>("compileJava9Java") {
+  options.release.set(9)
+  // Don't use --add-exports with --release, the sun.misc package isn't needed in Java 9+ VarHandle implementation
+}
+
+tasks.named<Jar>("jar") {
+  manifest {
+    attributes["Multi-Release"] = "true"
+  }
+  from(sourceSets.named("java9").get().output) {
+    into("META-INF/versions/9")
+  }
+}
+
+// Configure test to include java9 classes when running on Java 9+
+val javaVersion = JavaVersion.current()
+if (javaVersion >= JavaVersion.VERSION_1_9) {
+  sourceSets.named("test") {
+    compileClasspath += sourceSets.named("java9").get().output
+    runtimeClasspath += sourceSets.named("java9").get().output
+  }
+}
+
 val versions: Map<String, String> by project
 dependencies {
   api(project(":api:all"))
