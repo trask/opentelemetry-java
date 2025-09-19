@@ -206,8 +206,6 @@ configurations.configureEach {
 val dependencyManagement by configurations.creating {
   isCanBeConsumed = false
   isCanBeResolved = false
-  @Suppress("DEPRECATION")
-  isVisible = false
 }
 
 dependencies {
