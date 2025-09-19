@@ -19,6 +19,7 @@ configurations {
   val implementation by getting
 
   create("transitiveSourceElements") {
+    @Suppress("DEPRECATION")
     isVisible = false
     isCanBeResolved = false
     isCanBeConsumed = true
@@ -34,6 +35,7 @@ configurations {
   }
 
   create("coverageDataElements") {
+    @Suppress("DEPRECATION")
     isVisible = false
     isCanBeResolved = false
     isCanBeConsumed = true
