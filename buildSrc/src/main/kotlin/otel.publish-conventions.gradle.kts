@@ -61,7 +61,18 @@ publishing {
         scm {
           connection.set("scm:git:git@github.com:open-telemetry/opentelemetry-java.git")
           developerConnection.set("scm:git:git@github.com:open-telemetry/opentelemetry-java.git")
-          url.set("git@github.com:open-telemetry/opentelemetry-java.git")
+          tag.set("${project.version}")
+          url.set("https://github.com/open-telemetry/opentelemetry-java/tree/${project.version}")
+        }
+
+        issueManagement {
+          system.set("GitHub Issues")
+          url.set("https://github.com/open-telemetry/opentelemetry-java/issues")
+        }
+
+        ciManagement {
+          system.set("GitHub Actions")
+          url.set("https://github.com/open-telemetry/opentelemetry-java/actions")
         }
       }
     }
