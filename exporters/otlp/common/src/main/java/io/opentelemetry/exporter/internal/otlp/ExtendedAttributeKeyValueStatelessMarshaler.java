@@ -5,6 +5,8 @@
 
 package io.opentelemetry.exporter.internal.otlp;
 
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.incubator.common.ExtendedAttributeKey;
 import io.opentelemetry.api.incubator.common.ExtendedAttributeType;
 import io.opentelemetry.api.incubator.common.ExtendedAttributes;
@@ -168,6 +170,21 @@ public final class ExtendedAttributeKeyValueStatelessMarshaler
               (List<Object>) value,
               AttributeArrayAnyValueStatelessMarshaler.INSTANCE,
               context);
+        case VALUE_ARRAY:
+          return StatelessMarshalerUtil.sizeMessageWithContext(
+              AnyValue.ARRAY_VALUE,
+              (List<Value<?>>) value,
+              ArrayAnyValueStatelessMarshaler.INSTANCE,
+              context);
+        case BYTE_ARRAY:
+          return AnyValue.BYTES_VALUE.getTagSize()
+              + CodedOutputStream.computeByteArraySizeNoTag((byte[]) value);
+        case MAP:
+          return StatelessMarshalerUtil.sizeMessageWithContext(
+              AnyValue.KVLIST_VALUE,
+              (Attributes) value,
+              MapAnyValueStatelessMarshaler.INSTANCE,
+              context);
         case EXTENDED_ATTRIBUTES:
           return StatelessMarshalerUtil.sizeMessageWithContext(
               AnyValue.KVLIST_VALUE,
@@ -211,6 +228,23 @@ public final class ExtendedAttributeKeyValueStatelessMarshaler
               Objects.requireNonNull(attributeKey.asAttributeKey()).getType(),
               (List<Object>) value,
               AttributeArrayAnyValueStatelessMarshaler.INSTANCE,
+              context);
+          return;
+        case VALUE_ARRAY:
+          output.serializeMessageWithContext(
+              AnyValue.ARRAY_VALUE,
+              (List<Value<?>>) value,
+              ArrayAnyValueStatelessMarshaler.INSTANCE,
+              context);
+          return;
+        case BYTE_ARRAY:
+          output.writeBytes(AnyValue.BYTES_VALUE, (byte[]) value);
+          return;
+        case MAP:
+          output.serializeMessageWithContext(
+              AnyValue.KVLIST_VALUE,
+              (Attributes) value,
+              MapAnyValueStatelessMarshaler.INSTANCE,
               context);
           return;
         case EXTENDED_ATTRIBUTES:

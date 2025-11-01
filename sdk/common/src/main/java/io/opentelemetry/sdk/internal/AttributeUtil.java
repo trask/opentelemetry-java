@@ -56,9 +56,14 @@ public final class AttributeUtil {
   }
 
   private static boolean isValidLength(Object value, int lengthLimit) {
+    if (value instanceof Attributes) {
+      return allMatch(
+          ((Attributes) value).asMap().values(), entry -> isValidLength(entry, lengthLimit));
+    }
     if (value instanceof List) {
       return allMatch((List<?>) value, entry -> isValidLength(entry, lengthLimit));
-    } else if (value instanceof String) {
+    }
+    if (value instanceof String) {
       return ((String) value).length() < lengthLimit;
     }
     return true;
@@ -80,6 +85,17 @@ public final class AttributeUtil {
   public static Object applyAttributeLengthLimit(Object value, int lengthLimit) {
     if (lengthLimit == Integer.MAX_VALUE) {
       return value;
+    }
+    if (value instanceof Attributes) {
+      Attributes attributes = (Attributes) value;
+      AttributesBuilder builder = Attributes.builder();
+      attributes.forEach(
+          (key, attributeValue) -> {
+            @SuppressWarnings("unchecked")
+            AttributeKey<Object> castKey = (AttributeKey<Object>) key;
+            builder.put(castKey, applyAttributeLengthLimit(attributeValue, lengthLimit));
+          });
+      return builder.build();
     }
     if (value instanceof List) {
       List<?> values = (List<?>) value;

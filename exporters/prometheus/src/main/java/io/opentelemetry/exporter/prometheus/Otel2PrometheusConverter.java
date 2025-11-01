@@ -650,6 +650,7 @@ final class Otel2PrometheusConverter {
                   "Unexpected label value of %s for %s",
                   attributeValue.getClass().getName(), type.name()));
         }
+      // TODO: BYTE_ARRAY, VALUE_ARRAY, MAP
     }
     throw new IllegalStateException("Unrecognized AttributeType: " + type);
   }

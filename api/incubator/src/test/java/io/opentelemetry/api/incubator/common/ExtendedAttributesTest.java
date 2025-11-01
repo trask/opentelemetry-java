@@ -10,6 +10,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.Value;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -247,6 +248,27 @@ class ExtendedAttributesTest {
                 .build(),
             ImmutableMap.builder().put("key", Arrays.asList(1.1, 2.2)).build()),
         Arguments.of(
+            ExtendedAttributes.builder().put("key", new byte[] {1, 2}).build(),
+            ImmutableMap.builder().put("key", new byte[] {1, 2}).build()),
+        Arguments.of(
+            ExtendedAttributes.builder()
+                .put(
+                    ExtendedAttributeKey.fromAttributeKey(AttributeKey.valueArrayKey("key")),
+                    Arrays.asList(Value.of("one"), Value.of(2L)))
+                .build(),
+            ImmutableMap.builder()
+                .put("key", Arrays.asList(Value.of("one"), Value.of(2L)))
+                .build()),
+        Arguments.of(
+            ExtendedAttributes.builder()
+                .put(
+                    ExtendedAttributeKey.fromAttributeKey(AttributeKey.mapKey("key")),
+                    Attributes.builder().put("child", "value").build())
+                .build(),
+            ImmutableMap.builder()
+                .put("key", Attributes.builder().put("child", "value").build())
+                .build()),
+        Arguments.of(
             ExtendedAttributes.builder()
                 .put(
                     ExtendedAttributeKey.extendedAttributesKey("key"),
@@ -314,6 +336,12 @@ class ExtendedAttributesTest {
         return ExtendedAttributeKey.longArrayKey(key);
       case DOUBLE_ARRAY:
         return ExtendedAttributeKey.doubleArrayKey(key);
+      case BYTE_ARRAY:
+        return ExtendedAttributeKey.fromAttributeKey(AttributeKey.byteArrayKey(key));
+      case VALUE_ARRAY:
+        return ExtendedAttributeKey.fromAttributeKey(AttributeKey.valueArrayKey(key));
+      case MAP:
+        return ExtendedAttributeKey.fromAttributeKey(AttributeKey.mapKey(key));
       case EXTENDED_ATTRIBUTES:
         return ExtendedAttributeKey.extendedAttributesKey(key);
     }
@@ -334,10 +362,16 @@ class ExtendedAttributesTest {
     if ((value instanceof Double) || (value instanceof Float)) {
       return ExtendedAttributeType.DOUBLE;
     }
+    if (value instanceof byte[]) {
+      return ExtendedAttributeType.BYTE_ARRAY;
+    }
     if (value instanceof List) {
       List<Object> list = (List<Object>) value;
       if (list.isEmpty()) {
         throw new IllegalArgumentException("Empty list");
+      }
+      if (list.get(0) instanceof Value) {
+        return ExtendedAttributeType.VALUE_ARRAY;
       }
       if (list.get(0) instanceof String) {
         return ExtendedAttributeType.STRING_ARRAY;
@@ -351,6 +385,9 @@ class ExtendedAttributesTest {
       if ((list.get(0) instanceof Double) || (list.get(0) instanceof Float)) {
         return ExtendedAttributeType.DOUBLE_ARRAY;
       }
+    }
+    if (value instanceof Attributes) {
+      return ExtendedAttributeType.MAP;
     }
     if ((value instanceof Map)) {
       return ExtendedAttributeType.EXTENDED_ATTRIBUTES;

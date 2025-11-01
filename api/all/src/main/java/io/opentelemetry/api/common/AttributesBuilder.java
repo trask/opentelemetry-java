@@ -164,6 +164,22 @@ public interface AttributesBuilder {
     return put(booleanArrayKey(key), toList(value));
   }
 
+  /** Puts a byte array attribute into this. */
+  default AttributesBuilder put(String key, byte[] value) {
+    if (value == null) {
+      return this;
+    }
+    return put(AttributeKey.byteArrayKey(key), value);
+  }
+
+  /** Puts an {@link Attributes} attribute into this. */
+  default AttributesBuilder put(String key, Attributes value) {
+    if (value == null) {
+      return this;
+    }
+    return put(AttributeKey.mapKey(key), value);
+  }
+
   /**
    * Puts all the provided attributes into this Builder.
    *

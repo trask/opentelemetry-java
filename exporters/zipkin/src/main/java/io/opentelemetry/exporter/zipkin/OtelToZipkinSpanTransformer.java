@@ -223,6 +223,7 @@ final class OtelToZipkinSpanTransformer {
       case LONG_ARRAY:
       case DOUBLE_ARRAY:
         return commaSeparated((List<?>) attributeValue);
+      // TODO: BYTE_ARRAY, VALUE_ARRAY, MAP
     }
     throw new IllegalStateException("Unknown attribute type: " + type);
   }

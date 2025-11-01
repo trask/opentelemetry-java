@@ -97,6 +97,22 @@ public interface ExtendedAttributesBuilder {
     return put(ExtendedAttributeKey.extendedAttributesKey(key), value);
   }
 
+  /** Puts a byte array attribute into this. */
+  default ExtendedAttributesBuilder put(String key, byte[] value) {
+    if (value == null) {
+      return this;
+    }
+    return put(ExtendedAttributeKey.fromAttributeKey(AttributeKey.byteArrayKey(key)), value);
+  }
+
+  /** Puts an {@link Attributes} attribute into this. */
+  default ExtendedAttributesBuilder put(String key, Attributes value) {
+    if (value == null) {
+      return this;
+    }
+    return put(ExtendedAttributeKey.fromAttributeKey(AttributeKey.mapKey(key)), value);
+  }
+
   /**
    * Puts a String array attribute into this.
    *

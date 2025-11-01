@@ -7,7 +7,10 @@ package io.opentelemetry.exporter.internal.otlp;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributeType;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.internal.InternalAttributeKeyImpl;
+import io.opentelemetry.exporter.internal.marshal.CodedOutputStream;
 import io.opentelemetry.exporter.internal.marshal.MarshalerContext;
 import io.opentelemetry.exporter.internal.marshal.MarshalerUtil;
 import io.opentelemetry.exporter.internal.marshal.Serializer;
@@ -100,6 +103,21 @@ public final class AttributeKeyValueStatelessMarshaler
               (List<Object>) value,
               AttributeArrayAnyValueStatelessMarshaler.INSTANCE,
               context);
+        case BYTE_ARRAY:
+          return AnyValue.BYTES_VALUE.getTagSize()
+              + CodedOutputStream.computeByteArraySizeNoTag((byte[]) value);
+        case VALUE_ARRAY:
+          return StatelessMarshalerUtil.sizeMessageWithContext(
+              AnyValue.ARRAY_VALUE,
+              (List<Value<?>>) value,
+              ArrayAnyValueStatelessMarshaler.INSTANCE,
+              context);
+        case MAP:
+          return StatelessMarshalerUtil.sizeMessageWithContext(
+              AnyValue.KVLIST_VALUE,
+              (Attributes) value,
+              MapAnyValueStatelessMarshaler.INSTANCE,
+              context);
       }
       // Error prone ensures the switch statement is complete, otherwise only can happen with
       // unaligned versions which are not supported.
@@ -134,6 +152,23 @@ public final class AttributeKeyValueStatelessMarshaler
               attributeType,
               (List<Object>) value,
               AttributeArrayAnyValueStatelessMarshaler.INSTANCE,
+              context);
+          return;
+        case BYTE_ARRAY:
+          output.writeBytes(AnyValue.BYTES_VALUE, (byte[]) value);
+          return;
+        case VALUE_ARRAY:
+          output.serializeMessageWithContext(
+              AnyValue.ARRAY_VALUE,
+              (List<Value<?>>) value,
+              ArrayAnyValueStatelessMarshaler.INSTANCE,
+              context);
+          return;
+        case MAP:
+          output.serializeMessageWithContext(
+              AnyValue.KVLIST_VALUE,
+              (Attributes) value,
+              MapAnyValueStatelessMarshaler.INSTANCE,
               context);
           return;
       }

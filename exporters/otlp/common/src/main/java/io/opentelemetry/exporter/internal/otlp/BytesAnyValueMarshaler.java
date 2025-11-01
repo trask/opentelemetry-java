@@ -27,6 +27,10 @@ final class BytesAnyValueMarshaler extends MarshalerWithSize {
     return new BytesAnyValueMarshaler(bytes);
   }
 
+  static MarshalerWithSize create(byte[] value) {
+    return new BytesAnyValueMarshaler(value);
+  }
+
   @Override
   public void writeTo(Serializer output) throws IOException {
     // Do not call serialize* method because we always have to write the message tag even if the

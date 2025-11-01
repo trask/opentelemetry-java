@@ -1,2 +1,20 @@
 Comparing source compatibility of opentelemetry-api-1.56.0-SNAPSHOT.jar against opentelemetry-api-1.55.0.jar
-No changes.
+***  MODIFIED INTERFACE: PUBLIC ABSTRACT io.opentelemetry.api.common.AttributeKey  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	GENERIC TEMPLATES: === T:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.api.common.AttributeKey byteArrayKey(java.lang.String)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.api.common.AttributeKey<io.opentelemetry.api.common.Attributes> mapKey(java.lang.String)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.api.common.AttributeKey<java.util.List<io.opentelemetry.api.common.Value<?>>> valueArrayKey(java.lang.String)
+***  MODIFIED INTERFACE: PUBLIC ABSTRACT io.opentelemetry.api.common.AttributesBuilder  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.api.common.AttributesBuilder put(java.lang.String, byte[])
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.api.common.AttributesBuilder put(java.lang.String, io.opentelemetry.api.common.Attributes)
+***  MODIFIED ENUM: PUBLIC FINAL io.opentelemetry.api.common.AttributeType  (compatible)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.api.common.AttributeType BYTE_ARRAY
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.api.common.AttributeType VALUE_ARRAY
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.api.common.AttributeType MAP
+***  MODIFIED INTERFACE: PUBLIC ABSTRACT io.opentelemetry.api.common.Value  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	GENERIC TEMPLATES: === T:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.api.common.Value<java.util.List<io.opentelemetry.api.common.KeyValue>> of(io.opentelemetry.api.common.Attributes)

@@ -77,6 +77,21 @@ public class ExtendedAttributeKeyTest {
             ExtendedAttributeType.DOUBLE_ARRAY,
             AttributeKey.doubleArrayKey("key")),
         Arguments.of(
+            ExtendedAttributeKey.fromAttributeKey(AttributeKey.byteArrayKey("key")),
+            "key",
+            ExtendedAttributeType.BYTE_ARRAY,
+            AttributeKey.byteArrayKey("key")),
+        Arguments.of(
+            ExtendedAttributeKey.fromAttributeKey(AttributeKey.valueArrayKey("key")),
+            "key",
+            ExtendedAttributeType.VALUE_ARRAY,
+            AttributeKey.valueArrayKey("key")),
+        Arguments.of(
+            ExtendedAttributeKey.fromAttributeKey(AttributeKey.mapKey("key")),
+            "key",
+            ExtendedAttributeType.MAP,
+            AttributeKey.mapKey("key")),
+        Arguments.of(
             ExtendedAttributeKey.extendedAttributesKey("key"),
             "key",
             ExtendedAttributeType.EXTENDED_ATTRIBUTES,
