@@ -8,12 +8,15 @@ package io.opentelemetry.api.common;
 import static io.opentelemetry.api.common.ArrayBackedAttributesBuilder.toList;
 import static io.opentelemetry.api.common.AttributeKey.booleanArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.byteArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.doubleKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.mapKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.api.common.AttributeKey.valueArrayKey;
 
 import java.util.Arrays;
 import java.util.List;
@@ -169,7 +172,15 @@ public interface AttributesBuilder {
     if (value == null) {
       return this;
     }
-    return put(AttributeKey.byteArrayKey(key), value);
+    return put(byteArrayKey(key), value);
+  }
+
+  /** Puts a {@link Value} array attribute into this. */
+  default AttributesBuilder put(String key, Value<?>... value) {
+    if (value == null) {
+      return this;
+    }
+    return put(valueArrayKey(key), Arrays.asList(value));
   }
 
   /** Puts an {@link Attributes} attribute into this. */
@@ -177,7 +188,7 @@ public interface AttributesBuilder {
     if (value == null) {
       return this;
     }
-    return put(AttributeKey.mapKey(key), value);
+    return put(mapKey(key), value);
   }
 
   /**

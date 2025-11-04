@@ -8,10 +8,12 @@ package io.opentelemetry.api.incubator.common;
 import static io.opentelemetry.api.incubator.common.ArrayBackedExtendedAttributesBuilder.toList;
 import static io.opentelemetry.api.incubator.common.ExtendedAttributeKey.booleanArrayKey;
 import static io.opentelemetry.api.incubator.common.ExtendedAttributeKey.booleanKey;
+import static io.opentelemetry.api.incubator.common.ExtendedAttributeKey.byteArrayKey;
 import static io.opentelemetry.api.incubator.common.ExtendedAttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.incubator.common.ExtendedAttributeKey.doubleKey;
 import static io.opentelemetry.api.incubator.common.ExtendedAttributeKey.longArrayKey;
 import static io.opentelemetry.api.incubator.common.ExtendedAttributeKey.longKey;
+import static io.opentelemetry.api.incubator.common.ExtendedAttributeKey.mapKey;
 import static io.opentelemetry.api.incubator.common.ExtendedAttributeKey.stringArrayKey;
 import static io.opentelemetry.api.incubator.common.ExtendedAttributeKey.stringKey;
 
@@ -97,7 +99,7 @@ public interface ExtendedAttributesBuilder {
     if (value == null) {
       return this;
     }
-    return put(ExtendedAttributeKey.mapKey(key), value);
+    return put(mapKey(key), value);
   }
 
   /** Puts a byte array attribute into this. */
@@ -105,7 +107,7 @@ public interface ExtendedAttributesBuilder {
     if (value == null) {
       return this;
     }
-    return put(ExtendedAttributeKey.byteArrayKey(key), value);
+    return put(byteArrayKey(key), value);
   }
 
   /** Puts an {@link Attributes} attribute into this. */
