@@ -180,16 +180,17 @@ public final class ExtendedAttributeKeyValueStatelessMarshaler
           return AnyValue.BYTES_VALUE.getTagSize()
               + CodedOutputStream.computeByteArraySizeNoTag((byte[]) value);
         case MAP:
+          if (value instanceof ExtendedAttributes) {
+            return StatelessMarshalerUtil.sizeMessageWithContext(
+                AnyValue.KVLIST_VALUE,
+                (ExtendedAttributes) value,
+                ExtendedAttributesKeyValueListStatelessMarshaler.INSTANCE,
+                context);
+          }
           return StatelessMarshalerUtil.sizeMessageWithContext(
               AnyValue.KVLIST_VALUE,
               (Attributes) value,
               MapAnyValueStatelessMarshaler.INSTANCE,
-              context);
-        case EXTENDED_ATTRIBUTES:
-          return StatelessMarshalerUtil.sizeMessageWithContext(
-              AnyValue.KVLIST_VALUE,
-              (ExtendedAttributes) value,
-              ExtendedAttributesKeyValueListStatelessMarshaler.INSTANCE,
               context);
       }
       // Error prone ensures the switch statement is complete, otherwise only can happen with
@@ -241,17 +242,18 @@ public final class ExtendedAttributeKeyValueStatelessMarshaler
           output.writeBytes(AnyValue.BYTES_VALUE, (byte[]) value);
           return;
         case MAP:
+          if (value instanceof ExtendedAttributes) {
+            output.serializeMessageWithContext(
+                AnyValue.KVLIST_VALUE,
+                (ExtendedAttributes) value,
+                ExtendedAttributesKeyValueListStatelessMarshaler.INSTANCE,
+                context);
+            return;
+          }
           output.serializeMessageWithContext(
               AnyValue.KVLIST_VALUE,
               (Attributes) value,
               MapAnyValueStatelessMarshaler.INSTANCE,
-              context);
-          return;
-        case EXTENDED_ATTRIBUTES:
-          output.serializeMessageWithContext(
-              AnyValue.KVLIST_VALUE,
-              (ExtendedAttributes) value,
-              ExtendedAttributesKeyValueListStatelessMarshaler.INSTANCE,
               context);
           return;
       }

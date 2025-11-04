@@ -146,8 +146,6 @@ public final class InternalExtendedAttributeKeyImpl<T> implements ExtendedAttrib
             extendedAttributeKey.getKey(), AttributeType.VALUE_ARRAY);
       case MAP:
         return InternalAttributeKeyImpl.create(extendedAttributeKey.getKey(), AttributeType.MAP);
-      case EXTENDED_ATTRIBUTES:
-        return null;
     }
     throw new IllegalArgumentException(
         "Unrecognized extendedAttributeKey type: " + extendedAttributeKey.getType());

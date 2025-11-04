@@ -8,6 +8,9 @@ package io.opentelemetry.sdk.internal;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.incubator.common.ExtendedAttributeKey;
+import io.opentelemetry.api.incubator.common.ExtendedAttributes;
+import io.opentelemetry.api.incubator.common.ExtendedAttributesBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +59,11 @@ public final class AttributeUtil {
   }
 
   private static boolean isValidLength(Object value, int lengthLimit) {
+    if (value instanceof ExtendedAttributes) {
+      return allMatch(
+          ((ExtendedAttributes) value).asMap().values(),
+          entry -> isValidLength(entry, lengthLimit));
+    }
     if (value instanceof Attributes) {
       return allMatch(
           ((Attributes) value).asMap().values(), entry -> isValidLength(entry, lengthLimit));
@@ -85,6 +93,17 @@ public final class AttributeUtil {
   public static Object applyAttributeLengthLimit(Object value, int lengthLimit) {
     if (lengthLimit == Integer.MAX_VALUE) {
       return value;
+    }
+    if (value instanceof ExtendedAttributes) {
+      ExtendedAttributes extendedAttributes = (ExtendedAttributes) value;
+      ExtendedAttributesBuilder builder = ExtendedAttributes.builder();
+      extendedAttributes.forEach(
+          (key, attributeValue) -> {
+            @SuppressWarnings("unchecked")
+            ExtendedAttributeKey<Object> castKey = (ExtendedAttributeKey<Object>) key;
+            builder.put(castKey, applyAttributeLengthLimit(attributeValue, lengthLimit));
+          });
+      return builder.build();
     }
     if (value instanceof Attributes) {
       Attributes attributes = (Attributes) value;

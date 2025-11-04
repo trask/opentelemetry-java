@@ -6,6 +6,7 @@
 package io.opentelemetry.api.incubator.common;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.incubator.internal.InternalExtendedAttributeKeyImpl;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -93,8 +94,18 @@ public interface ExtendedAttributeKey<T> {
     return fromAttributeKey(AttributeKey.doubleArrayKey(key));
   }
 
-  /** Returns a new ExtendedAttributeKey for Map valued attributes. */
-  static ExtendedAttributeKey<ExtendedAttributes> extendedAttributesKey(String key) {
-    return InternalExtendedAttributeKeyImpl.create(key, ExtendedAttributeType.EXTENDED_ATTRIBUTES);
+  /** Returns a new ExtendedAttributeKey for byte array valued attributes. */
+  static ExtendedAttributeKey<byte[]> byteArrayKey(String key) {
+    return InternalExtendedAttributeKeyImpl.create(key, ExtendedAttributeType.BYTE_ARRAY);
+  }
+
+  /** Returns a new ExtendedAttributeKey for List&lt;Value&lt;?&gt;&gt; valued attributes. */
+  static ExtendedAttributeKey<List<Value<?>>> valueArrayKey(String key) {
+    return InternalExtendedAttributeKeyImpl.create(key, ExtendedAttributeType.VALUE_ARRAY);
+  }
+
+  /** Returns a new ExtendedAttributeKey for {@link ExtendedAttributes} valued attributes. */
+  static ExtendedAttributeKey<ExtendedAttributes> mapKey(String key) {
+    return InternalExtendedAttributeKeyImpl.create(key, ExtendedAttributeType.MAP);
   }
 }

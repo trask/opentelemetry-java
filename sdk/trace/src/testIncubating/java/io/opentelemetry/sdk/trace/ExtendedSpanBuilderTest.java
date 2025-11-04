@@ -13,8 +13,8 @@ import io.opentelemetry.api.incubator.common.ExtendedAttributes;
 import io.opentelemetry.api.incubator.trace.ExtendedSpanBuilder;
 import io.opentelemetry.api.incubator.trace.ExtendedTracer;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
-import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,7 +63,7 @@ class ExtendedSpanBuilderTest {
     ExtendedSpanBuilder spanBuilder = tracer.spanBuilder("span");
 
     spanBuilder.setAttribute(
-        ExtendedAttributeKey.extendedAttributesKey("extended.map"), ExtendedAttributes.empty());
+        ExtendedAttributeKey.mapKey("extended.map"), ExtendedAttributes.empty());
     spanBuilder.startSpan().end();
 
     List<SpanData> spans = spanExporter.getFinishedSpanItems();

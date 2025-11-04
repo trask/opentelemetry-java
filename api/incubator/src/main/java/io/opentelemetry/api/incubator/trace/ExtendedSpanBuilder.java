@@ -134,8 +134,8 @@ public interface ExtendedSpanBuilder extends SpanBuilder {
    * <p>NOTE: all standard {@link AttributeKey}-value pairs can also be represented as {@link
    * ExtendedAttributeKey}-value pairs, but not all {@link ExtendedAttributeKey}-value pairs can be
    * represented as standard {@link AttributeKey}-value pairs. From the standpoint of the emitted
-   * span, there is no difference between adding attributes using the standard or extended
-   * attribute APIs.
+   * span, there is no difference between adding attributes using the standard or extended attribute
+   * APIs.
    */
   <T> ExtendedSpanBuilder setAttribute(ExtendedAttributeKey<T> key, T value);
 

@@ -77,12 +77,12 @@ public class ExtendedAttributeKeyTest {
             ExtendedAttributeType.DOUBLE_ARRAY,
             AttributeKey.doubleArrayKey("key")),
         Arguments.of(
-            ExtendedAttributeKey.fromAttributeKey(AttributeKey.byteArrayKey("key")),
+            ExtendedAttributeKey.byteArrayKey("key"),
             "key",
             ExtendedAttributeType.BYTE_ARRAY,
             AttributeKey.byteArrayKey("key")),
         Arguments.of(
-            ExtendedAttributeKey.fromAttributeKey(AttributeKey.valueArrayKey("key")),
+            ExtendedAttributeKey.valueArrayKey("key"),
             "key",
             ExtendedAttributeType.VALUE_ARRAY,
             AttributeKey.valueArrayKey("key")),
@@ -92,9 +92,9 @@ public class ExtendedAttributeKeyTest {
             ExtendedAttributeType.MAP,
             AttributeKey.mapKey("key")),
         Arguments.of(
-            ExtendedAttributeKey.extendedAttributesKey("key"),
+            ExtendedAttributeKey.mapKey("key"),
             "key",
-            ExtendedAttributeType.EXTENDED_ATTRIBUTES,
-            null));
+            ExtendedAttributeType.MAP,
+            AttributeKey.mapKey("key")));
   }
 }

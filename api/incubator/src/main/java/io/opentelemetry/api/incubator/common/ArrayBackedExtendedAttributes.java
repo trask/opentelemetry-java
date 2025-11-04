@@ -64,7 +64,12 @@ final class ArrayBackedExtendedAttributes
             AttributeKey<Object> attributeKey =
                 (AttributeKey<Object>) extendedAttributeKey.asAttributeKey();
             if (attributeKey != null) {
-              builder.put(attributeKey, value);
+              if (attributeKey.getType() == io.opentelemetry.api.common.AttributeType.MAP
+                  && value instanceof ExtendedAttributes) {
+                builder.put(attributeKey, ((ExtendedAttributes) value).asAttributes());
+              } else {
+                builder.put(attributeKey, value);
+              }
             }
           });
       attributes = builder.build();

@@ -6,6 +6,7 @@
 package io.opentelemetry.api.incubator.common;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.AttributeType;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import java.util.Map;
@@ -17,9 +18,8 @@ import javax.annotation.concurrent.Immutable;
  * An immutable container for extended attributes.
  *
  * <p>"extended" refers an extended set of allowed value types compared to standard {@link
- * Attributes}. Notably, {@link ExtendedAttributes} values can be of type {@link
- * ExtendedAttributeType#EXTENDED_ATTRIBUTES}, allowing nested {@link ExtendedAttributes} of
- * arbitrary depth.
+ * Attributes}. Notably, {@link ExtendedAttributes} values can be nested {@link ExtendedAttributes}
+ * via the {@link ExtendedAttributeType#MAP} type, allowing arbitrary depth.
  *
  * <p>Where standard {@link Attributes} are accepted everyone that OpenTelemetry represents key /
  * value pairs, {@link ExtendedAttributes} are only accepted in select places, such as log records
@@ -53,11 +53,20 @@ public interface ExtendedAttributes {
 
   /** Returns the value for the given {@link AttributeKey}, or {@code null} if not found. */
   @Nullable
+  @SuppressWarnings("unchecked")
   default <T> T get(AttributeKey<T> key) {
     if (key == null) {
       return null;
     }
-    return get(ExtendedAttributeKey.fromAttributeKey(key));
+    ExtendedAttributeKey<T> extendedAttributeKey = ExtendedAttributeKey.fromAttributeKey(key);
+    Object value = get(extendedAttributeKey);
+    if (value == null) {
+      return null;
+    }
+    if (key.getType() == AttributeType.MAP && value instanceof ExtendedAttributes) {
+      return (T) ((ExtendedAttributes) value).asAttributes();
+    }
+    return (T) value;
   }
 
   /** Returns the value for the given {@link ExtendedAttributeKey}, or {@code null} if not found. */

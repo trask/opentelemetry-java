@@ -118,13 +118,14 @@ public class IncubatingUtil {
         return new KeyValueMarshaler(
             keyUtf8, ArrayAnyValueMarshaler.createAnyValue((List<Value<?>>) value));
       case MAP:
+        if (value instanceof ExtendedAttributes) {
+          return new KeyValueMarshaler(
+              keyUtf8,
+              new KeyValueListAnyValueMarshaler(
+                  new KeyValueListAnyValueMarshaler.KeyValueListMarshaler(
+                      createForExtendedAttributes((ExtendedAttributes) value))));
+        }
         return new KeyValueMarshaler(keyUtf8, MapAnyValueMarshaler.create((Attributes) value));
-      case EXTENDED_ATTRIBUTES:
-        return new KeyValueMarshaler(
-            keyUtf8,
-            new KeyValueListAnyValueMarshaler(
-                new KeyValueListAnyValueMarshaler.KeyValueListMarshaler(
-                    createForExtendedAttributes((ExtendedAttributes) value))));
     }
     // Error prone ensures the switch statement is complete, otherwise only can happen with
     // unaligned versions which are not supported.

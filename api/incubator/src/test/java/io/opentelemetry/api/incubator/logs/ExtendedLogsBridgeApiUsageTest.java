@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.incubator.common.ExtendedAttributeKey;
 import io.opentelemetry.api.incubator.common.ExtendedAttributes;
 import io.opentelemetry.api.logs.Logger;
@@ -104,14 +105,18 @@ class ExtendedLogsBridgeApiUsageTest {
   AttributeKey<List<Double>> doubleArrKey = AttributeKey.doubleArrayKey("acme.double_array");
 
   // Extended keys
-  ExtendedAttributeKey<ExtendedAttributes> mapKey =
-      ExtendedAttributeKey.extendedAttributesKey("acme.map");
+  ExtendedAttributeKey<ExtendedAttributes> mapKey = ExtendedAttributeKey.mapKey("acme.map");
+  ExtendedAttributeKey<byte[]> bytesKey = ExtendedAttributeKey.byteArrayKey("acme.bytes");
+  ExtendedAttributeKey<List<Value<?>>> extendedValueArrayKey =
+      ExtendedAttributeKey.valueArrayKey("acme.value_array");
 
   @Test
   @SuppressLogger(ExtendedLogsBridgeApiUsageTest.class)
   void extendedAttributesUsage() {
     // Initialize from builder. Varargs style initialization (ExtendedAttributes.of(...) not
     // supported.
+    List<Value<?>> heterogeneousValues =
+        Arrays.asList(Value.of("value"), Value.of(1L), Value.of(true));
     ExtendedAttributes extendedAttributes =
         ExtendedAttributes.builder()
             .put(strKey, "value")
@@ -122,6 +127,8 @@ class ExtendedLogsBridgeApiUsageTest {
             .put(longArrKey, Arrays.asList(1L, 2L))
             .put(booleanArrKey, Arrays.asList(true, false))
             .put(doubleArrKey, Arrays.asList(1.1, 2.2))
+            .put(bytesKey, new byte[] {(byte) 1, (byte) 2})
+            .put(extendedValueArrayKey, heterogeneousValues)
             .put(
                 mapKey,
                 ExtendedAttributes.builder().put("childStr", "value").put("childLong", 1L).build())
@@ -136,6 +143,9 @@ class ExtendedLogsBridgeApiUsageTest {
     assertThat(extendedAttributes.get(longArrKey)).isEqualTo(Arrays.asList(1L, 2L));
     assertThat(extendedAttributes.get(booleanArrKey)).isEqualTo(Arrays.asList(true, false));
     assertThat(extendedAttributes.get(doubleArrKey)).isEqualTo(Arrays.asList(1.1, 2.2));
+    assertThat((byte[]) extendedAttributes.get(bytesKey))
+        .containsExactly((byte) 1, (byte) 2);
+    assertThat(extendedAttributes.get(extendedValueArrayKey)).isEqualTo(heterogeneousValues);
     assertThat(extendedAttributes.get(mapKey))
         .isEqualTo(
             ExtendedAttributes.builder().put("childStr", "value").put("childLong", 1L).build());
@@ -148,7 +158,9 @@ class ExtendedLogsBridgeApiUsageTest {
     // acme.double_array(DOUBLE_ARRAY): [1.1, 2.2]
     // acme.long(LONG): 1
     // acme.long_array(LONG_ARRAY): [1, 2]
-    // acme.map(EXTENDED_ATTRIBUTES): {childLong=1, childStr="value"}
+    // acme.bytes(BYTE_ARRAY): [1, 2]
+    // acme.value_array(VALUE_ARRAY): ["value", 1, true]
+    // acme.map(MAP): {childLong=1, childStr="value"}
     // acme.string(STRING): value
     // acme.string_array(STRING_ARRAY): [value1, value2]
     extendedAttributes.forEach(
@@ -169,6 +181,8 @@ class ExtendedLogsBridgeApiUsageTest {
             .build();
 
     Logger logger = loggerProvider.get("logger");
+    List<Value<?>> heterogeneousValues =
+        Arrays.asList(Value.of("value"), Value.of(1L), Value.of(true));
 
     // Can set either standard or extended attributes on
     ((ExtendedLogRecordBuilder) logger.logRecordBuilder())
@@ -181,6 +195,8 @@ class ExtendedLogsBridgeApiUsageTest {
         .setAttribute(longArrKey, Arrays.asList(1L, 2L))
         .setAttribute(booleanArrKey, Arrays.asList(true, false))
         .setAttribute(doubleArrKey, Arrays.asList(1.1, 2.2))
+        .setAttribute(bytesKey, new byte[] {(byte) 1, (byte) 2})
+        .setAttribute(extendedValueArrayKey, heterogeneousValues)
         .setAttribute(
             mapKey,
             ExtendedAttributes.builder().put("childStr", "value").put("childLong", 1L).build())
@@ -223,6 +239,8 @@ class ExtendedLogsBridgeApiUsageTest {
                           .put(longArrKey, Arrays.asList(1L, 2L))
                           .put(booleanArrKey, Arrays.asList(true, false))
                           .put(doubleArrKey, Arrays.asList(1.1, 2.2))
+                          .put(bytesKey, new byte[] {(byte) 1, (byte) 2})
+                          .put(extendedValueArrayKey, heterogeneousValues)
                           .put(
                               mapKey,
                               ExtendedAttributes.builder()

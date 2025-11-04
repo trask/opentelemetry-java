@@ -57,6 +57,10 @@ class ExtendedAttributesTest {
 
           Object actualValue = extendedAttributes.get(attributeKey);
 
+          if (actualValue instanceof Attributes && value instanceof Map) {
+            actualValue = toSimpleMap((Attributes) actualValue);
+          }
+
           assertThat(actualValue)
               .describedAs(key + "(" + attributeKey.getType() + ")")
               .isEqualTo(value);
@@ -96,9 +100,9 @@ class ExtendedAttributesTest {
     assertThat(actual.size()).isEqualTo(expected.size());
     actual.forEach(
         (key, value) -> {
-          if (key.getType() == ExtendedAttributeType.EXTENDED_ATTRIBUTES) {
+          if (value instanceof ExtendedAttributes) {
             assertEquals(
-                ((ExtendedAttributes) value).asMap(),
+                toMap((ExtendedAttributes) value),
                 (Map<String, Object>) expected.get(key.getKey()));
             return;
           }
@@ -113,12 +117,15 @@ class ExtendedAttributesTest {
 
     attributes.forEach(
         (key, value) -> {
-          assertThat(value).isEqualTo(expectedMap.get(key.getKey()));
+          Object expectedValue = expectedMap.get(key.getKey());
+          if (value instanceof Attributes && expectedValue instanceof Map) {
+            assertThat(toSimpleMap((Attributes) value)).isEqualTo(expectedValue);
+            return;
+          }
+          assertThat(value).isEqualTo(expectedValue);
         });
 
-    long expectedSize =
-        expectedMap.values().stream().filter(value -> !(value instanceof Map)).count();
-    assertThat(attributes.size()).isEqualTo(expectedSize);
+    assertThat(attributes.size()).isEqualTo(expectedMap.size());
   }
 
   @ParameterizedTest
@@ -162,7 +169,7 @@ class ExtendedAttributesTest {
     map.forEach(
         (key, value) -> {
           ExtendedAttributeKey<?> extendedAttributeKey = getKey(key, value);
-          if (extendedAttributeKey.getType() == ExtendedAttributeType.EXTENDED_ATTRIBUTES) {
+          if (value instanceof Map) {
             builder.put(
                 (ExtendedAttributeKey<ExtendedAttributes>) extendedAttributeKey,
                 fromMap((Map<String, Object>) value));
@@ -271,7 +278,7 @@ class ExtendedAttributesTest {
         Arguments.of(
             ExtendedAttributes.builder()
                 .put(
-                    ExtendedAttributeKey.extendedAttributesKey("key"),
+                    ExtendedAttributeKey.mapKey("key"),
                     ExtendedAttributes.builder().put("child", "value").build())
                 .build(),
             ImmutableMap.builder()
@@ -309,12 +316,19 @@ class ExtendedAttributesTest {
     Map<String, Object> map = new HashMap<>();
     extendedAttributes.forEach(
         (key, value) -> {
-          if (key.getType() == ExtendedAttributeType.EXTENDED_ATTRIBUTES) {
+          if (value instanceof ExtendedAttributes) {
             map.put(key.getKey(), toMap((ExtendedAttributes) value));
             return;
           }
           map.put(key.getKey(), value);
         });
+    return map;
+  }
+
+  private static Map<String, Object> toSimpleMap(Attributes attributes) {
+    Map<String, Object> map = new HashMap<>();
+    attributes.forEach(
+        (attributeKey, attributeValue) -> map.put(attributeKey.getKey(), attributeValue));
     return map;
   }
 
@@ -337,13 +351,14 @@ class ExtendedAttributesTest {
       case DOUBLE_ARRAY:
         return ExtendedAttributeKey.doubleArrayKey(key);
       case BYTE_ARRAY:
-        return ExtendedAttributeKey.fromAttributeKey(AttributeKey.byteArrayKey(key));
+        return ExtendedAttributeKey.byteArrayKey(key);
       case VALUE_ARRAY:
-        return ExtendedAttributeKey.fromAttributeKey(AttributeKey.valueArrayKey(key));
+        return ExtendedAttributeKey.valueArrayKey(key);
       case MAP:
-        return ExtendedAttributeKey.fromAttributeKey(AttributeKey.mapKey(key));
-      case EXTENDED_ATTRIBUTES:
-        return ExtendedAttributeKey.extendedAttributesKey(key);
+        if (value instanceof Attributes) {
+          return ExtendedAttributeKey.fromAttributeKey(AttributeKey.mapKey(key));
+        }
+        return ExtendedAttributeKey.mapKey(key);
     }
     throw new IllegalArgumentException();
   }
@@ -390,7 +405,7 @@ class ExtendedAttributesTest {
       return ExtendedAttributeType.MAP;
     }
     if ((value instanceof Map)) {
-      return ExtendedAttributeType.EXTENDED_ATTRIBUTES;
+      return ExtendedAttributeType.MAP;
     }
     throw new IllegalArgumentException("Unrecognized value type: " + value);
   }
