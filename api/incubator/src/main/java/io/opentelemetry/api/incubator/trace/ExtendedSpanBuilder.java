@@ -8,6 +8,7 @@ package io.opentelemetry.api.incubator.trace;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.incubator.common.ExtendedAttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanContext;
@@ -126,6 +127,17 @@ public interface ExtendedSpanBuilder extends SpanBuilder {
   /** {@inheritDoc} */
   @Override
   <T> ExtendedSpanBuilder setAttribute(AttributeKey<T> key, T value);
+
+  /**
+   * Set an attribute.
+   *
+   * <p>NOTE: all standard {@link AttributeKey}-value pairs can also be represented as {@link
+   * ExtendedAttributeKey}-value pairs, but not all {@link ExtendedAttributeKey}-value pairs can be
+   * represented as standard {@link AttributeKey}-value pairs. From the standpoint of the emitted
+   * span, there is no difference between adding attributes using the standard or extended
+   * attribute APIs.
+   */
+  <T> ExtendedSpanBuilder setAttribute(ExtendedAttributeKey<T> key, T value);
 
   /** {@inheritDoc} */
   @Override

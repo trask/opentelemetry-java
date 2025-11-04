@@ -7,6 +7,7 @@ package io.opentelemetry.sdk.trace;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.incubator.common.ExtendedAttributeKey;
 import io.opentelemetry.api.incubator.propagation.ExtendedContextPropagators;
 import io.opentelemetry.api.incubator.trace.ExtendedSpanBuilder;
 import io.opentelemetry.api.incubator.trace.SpanCallable;
@@ -91,6 +92,19 @@ final class ExtendedSdkSpanBuilder extends SdkSpanBuilder implements ExtendedSpa
   @Override
   public <T> ExtendedSpanBuilder setAttribute(AttributeKey<T> key, T value) {
     super.setAttribute(key, value);
+    return this;
+  }
+
+  @Override
+  public <T> ExtendedSpanBuilder setAttribute(ExtendedAttributeKey<T> key, T value) {
+    if (key == null || value == null) {
+      return this;
+    }
+    AttributeKey<T> attributeKey = key.asAttributeKey();
+    if (attributeKey == null || attributeKey.getKey().isEmpty()) {
+      return this;
+    }
+    super.setAttribute(attributeKey, value);
     return this;
   }
 

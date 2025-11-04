@@ -7,6 +7,7 @@ package io.opentelemetry.api.incubator.trace;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.incubator.common.ExtendedAttributeKey;
 import io.opentelemetry.api.incubator.propagation.ExtendedContextPropagators;
 import io.opentelemetry.api.internal.ApiUsageLogger;
 import io.opentelemetry.api.trace.Span;
@@ -115,6 +116,11 @@ final class ExtendedDefaultTracer implements ExtendedTracer {
 
     @Override
     public <T> NoopSpanBuilder setAttribute(AttributeKey<T> key, T value) {
+      return this;
+    }
+
+    @Override
+    public <T> NoopSpanBuilder setAttribute(ExtendedAttributeKey<T> key, T value) {
       return this;
     }
 
