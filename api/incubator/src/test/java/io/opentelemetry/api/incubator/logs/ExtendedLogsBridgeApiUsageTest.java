@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.incubator.common.ExtendedAttributeKey;
 import io.opentelemetry.api.incubator.common.ExtendedAttributes;
 import io.opentelemetry.api.logs.Logger;
@@ -105,6 +106,7 @@ class ExtendedLogsBridgeApiUsageTest {
 
   // Extended keys
   ExtendedAttributeKey<ExtendedAttributes> mapKey = ExtendedAttributeKey.mapKey("acme.map");
+  ExtendedAttributeKey<Value<?>> valueKey = ExtendedAttributeKey.valueKey("acme.value");
 
   @Test
   @SuppressLogger(ExtendedLogsBridgeApiUsageTest.class)
@@ -124,6 +126,7 @@ class ExtendedLogsBridgeApiUsageTest {
             .put(
                 mapKey,
                 ExtendedAttributes.builder().put("childStr", "value").put("childLong", 1L).build())
+            .put(valueKey, Value.of("value"))
             .build();
 
     // Retrieval
@@ -138,6 +141,7 @@ class ExtendedLogsBridgeApiUsageTest {
     assertThat(extendedAttributes.get(mapKey))
         .isEqualTo(
             ExtendedAttributes.builder().put("childStr", "value").put("childLong", 1L).build());
+    assertThat(extendedAttributes.get(valueKey)).isEqualTo(Value.of("value"));
 
     // Iteration
     // Output:
@@ -148,6 +152,7 @@ class ExtendedLogsBridgeApiUsageTest {
     // acme.long(LONG): 1
     // acme.long_array(LONG_ARRAY): [1, 2]
     // acme.map(MAP): {childLong=1, childStr="value"}
+    // acme.value(VALUE): ValueString{value}
     // acme.string(STRING): value
     // acme.string_array(STRING_ARRAY): [value1, value2]
     extendedAttributes.forEach(
@@ -183,6 +188,7 @@ class ExtendedLogsBridgeApiUsageTest {
         .setAttribute(
             mapKey,
             ExtendedAttributes.builder().put("childStr", "value").put("childLong", 1L).build())
+        .setAttribute(valueKey, Value.of("value"))
         .setAllAttributes(Attributes.builder().put("key1", "value").build())
         .setAllAttributes(ExtendedAttributes.builder().put("key2", "value").build())
         .emit();
@@ -228,6 +234,7 @@ class ExtendedLogsBridgeApiUsageTest {
                                   .put("childStr", "value")
                                   .put("childLong", 1L)
                                   .build())
+                          .put(valueKey, Value.of("value"))
                           .put("key1", "value")
                           .put("key2", "value")
                           .build());

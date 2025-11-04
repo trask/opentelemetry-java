@@ -10,6 +10,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.Value;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -116,7 +117,9 @@ class ExtendedAttributesTest {
         });
 
     long expectedSize =
-        expectedMap.values().stream().filter(value -> !(value instanceof Map)).count();
+        expectedMap.values().stream()
+            .filter(value -> !(value instanceof Map) && !(value instanceof Value))
+            .count();
     assertThat(attributes.size()).isEqualTo(expectedSize);
   }
 
@@ -213,6 +216,9 @@ class ExtendedAttributesTest {
                 .put("key", ImmutableMap.builder().put("child", "value").build())
                 .build()),
         Arguments.of(
+            ExtendedAttributes.builder().put("key", Value.of("value")).build(),
+            ImmutableMap.builder().put("key", Value.of("value")).build()),
+        Arguments.of(
             ExtendedAttributes.builder()
                 .put(ExtendedAttributeKey.stringKey("key"), "value")
                 .build(),
@@ -255,6 +261,11 @@ class ExtendedAttributesTest {
             ImmutableMap.builder()
                 .put("key", ImmutableMap.builder().put("child", "value").build())
                 .build()),
+        Arguments.of(
+            ExtendedAttributes.builder()
+                .put(ExtendedAttributeKey.valueKey("key"), Value.of("value"))
+                .build(),
+            ImmutableMap.builder().put("key", Value.of("value")).build()),
         // Multiple entries
         Arguments.of(
             ExtendedAttributes.builder()
@@ -268,6 +279,7 @@ class ExtendedAttributesTest {
                 .put("key8", 1L, 2L)
                 .put("key9", 1.1, 2.2)
                 .put("key10", ExtendedAttributes.builder().put("child", "value").build())
+                .put("key11", Value.of("value"))
                 .build(),
             ImmutableMap.builder()
                 .put("key1", "value1")
@@ -280,6 +292,7 @@ class ExtendedAttributesTest {
                 .put("key8", Arrays.asList(1L, 2L))
                 .put("key9", Arrays.asList(1.1, 2.2))
                 .put("key10", ImmutableMap.builder().put("child", "value").build())
+                .put("key11", Value.of("value"))
                 .build()));
   }
 
@@ -316,6 +329,8 @@ class ExtendedAttributesTest {
         return ExtendedAttributeKey.doubleArrayKey(key);
       case MAP:
         return ExtendedAttributeKey.mapKey(key);
+      case VALUE:
+        return ExtendedAttributeKey.valueKey(key);
     }
     throw new IllegalArgumentException();
   }
@@ -354,6 +369,9 @@ class ExtendedAttributesTest {
     }
     if ((value instanceof Map)) {
       return ExtendedAttributeType.MAP;
+    }
+    if (value instanceof Value) {
+      return ExtendedAttributeType.VALUE;
     }
     throw new IllegalArgumentException("Unrecognized value type: " + value);
   }

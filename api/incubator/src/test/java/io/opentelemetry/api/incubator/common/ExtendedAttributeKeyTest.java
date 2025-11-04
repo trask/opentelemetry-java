@@ -76,6 +76,8 @@ public class ExtendedAttributeKeyTest {
             "key",
             ExtendedAttributeType.DOUBLE_ARRAY,
             AttributeKey.doubleArrayKey("key")),
-        Arguments.of(ExtendedAttributeKey.mapKey("key"), "key", ExtendedAttributeType.MAP, null));
+        Arguments.of(ExtendedAttributeKey.mapKey("key"), "key", ExtendedAttributeType.MAP, null),
+        Arguments.of(
+            ExtendedAttributeKey.valueKey("key"), "key", ExtendedAttributeType.VALUE, null));
   }
 }
