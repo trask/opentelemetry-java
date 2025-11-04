@@ -104,8 +104,7 @@ class ExtendedLogsBridgeApiUsageTest {
   AttributeKey<List<Double>> doubleArrKey = AttributeKey.doubleArrayKey("acme.double_array");
 
   // Extended keys
-  ExtendedAttributeKey<ExtendedAttributes> mapKey =
-      ExtendedAttributeKey.extendedAttributesKey("acme.map");
+  ExtendedAttributeKey<ExtendedAttributes> mapKey = ExtendedAttributeKey.mapKey("acme.map");
 
   @Test
   @SuppressLogger(ExtendedLogsBridgeApiUsageTest.class)
@@ -148,7 +147,7 @@ class ExtendedLogsBridgeApiUsageTest {
     // acme.double_array(DOUBLE_ARRAY): [1.1, 2.2]
     // acme.long(LONG): 1
     // acme.long_array(LONG_ARRAY): [1, 2]
-    // acme.map(EXTENDED_ATTRIBUTES): {childLong=1, childStr="value"}
+    // acme.map(MAP): {childLong=1, childStr="value"}
     // acme.string(STRING): value
     // acme.string_array(STRING_ARRAY): [value1, value2]
     extendedAttributes.forEach(

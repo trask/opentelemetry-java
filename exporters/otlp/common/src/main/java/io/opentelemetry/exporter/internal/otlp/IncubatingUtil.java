@@ -110,7 +110,7 @@ public class IncubatingUtil {
       case DOUBLE_ARRAY:
         return new KeyValueMarshaler(
             keyUtf8, ArrayAnyValueMarshaler.createDouble((List<Double>) value));
-      case EXTENDED_ATTRIBUTES:
+      case MAP:
         return new KeyValueMarshaler(
             keyUtf8,
             new KeyValueListAnyValueMarshaler(

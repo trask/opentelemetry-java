@@ -168,7 +168,7 @@ public final class ExtendedAttributeKeyValueStatelessMarshaler
               (List<Object>) value,
               AttributeArrayAnyValueStatelessMarshaler.INSTANCE,
               context);
-        case EXTENDED_ATTRIBUTES:
+        case MAP:
           return StatelessMarshalerUtil.sizeMessageWithContext(
               AnyValue.KVLIST_VALUE,
               (ExtendedAttributes) value,
@@ -213,7 +213,7 @@ public final class ExtendedAttributeKeyValueStatelessMarshaler
               AttributeArrayAnyValueStatelessMarshaler.INSTANCE,
               context);
           return;
-        case EXTENDED_ATTRIBUTES:
+        case MAP:
           output.serializeMessageWithContext(
               AnyValue.KVLIST_VALUE,
               (ExtendedAttributes) value,

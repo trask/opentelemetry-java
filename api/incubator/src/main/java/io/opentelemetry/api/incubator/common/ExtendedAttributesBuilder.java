@@ -94,7 +94,7 @@ public interface ExtendedAttributesBuilder {
    * @return this Builder
    */
   default <T> ExtendedAttributesBuilder put(String key, ExtendedAttributes value) {
-    return put(ExtendedAttributeKey.extendedAttributesKey(key), value);
+    return put(ExtendedAttributeKey.mapKey(key), value);
   }
 
   /**

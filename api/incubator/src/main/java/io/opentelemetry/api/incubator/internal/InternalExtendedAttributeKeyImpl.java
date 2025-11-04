@@ -138,7 +138,7 @@ public final class InternalExtendedAttributeKeyImpl<T> implements ExtendedAttrib
       case DOUBLE_ARRAY:
         return InternalAttributeKeyImpl.create(
             extendedAttributeKey.getKey(), AttributeType.DOUBLE_ARRAY);
-      case EXTENDED_ATTRIBUTES:
+      case MAP:
         return null;
     }
     throw new IllegalArgumentException(
