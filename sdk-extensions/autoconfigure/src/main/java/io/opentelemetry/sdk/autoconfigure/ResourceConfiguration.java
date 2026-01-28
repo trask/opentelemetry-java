@@ -8,18 +8,15 @@ package io.opentelemetry.sdk.autoconfigure;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.internal.PercentDecoder;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.sdk.autoconfigure.internal.SpiHelper;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.resources.ResourceBuilder;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -67,18 +64,13 @@ public final class ResourceConfiguration {
    */
   public static Resource createEnvironmentResource(ConfigProperties config) {
     AttributesBuilder resourceAttributes = Attributes.builder();
-    try {
-      for (Map.Entry<String, String> entry : config.getMap(ATTRIBUTE_PROPERTY).entrySet()) {
-        resourceAttributes.put(
-            entry.getKey(),
-            // Attributes specified via otel.resource.attributes follow the W3C Baggage spec and
-            // characters outside the baggage-octet range are percent encoded
-            // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/sdk.md#specifying-resource-information-via-an-environment-variable
-            URLDecoder.decode(entry.getValue(), StandardCharsets.UTF_8.displayName()));
-      }
-    } catch (UnsupportedEncodingException e) {
-      // Should not happen since always using standard charset
-      throw new ConfigurationException("Unable to decode resource attributes.", e);
+    for (Map.Entry<String, String> entry : config.getMap(ATTRIBUTE_PROPERTY).entrySet()) {
+      resourceAttributes.put(
+          entry.getKey(),
+          // Attributes specified via otel.resource.attributes follow the W3C Baggage spec and
+          // characters outside the baggage-octet range are percent encoded
+          // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/sdk.md#specifying-resource-information-via-an-environment-variable
+          PercentDecoder.decode(entry.getValue()));
     }
     String serviceName = config.getString(SERVICE_NAME_PROPERTY);
     if (serviceName != null) {

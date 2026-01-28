@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.api.baggage.propagation;
+package io.opentelemetry.api.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-class BaggageCodecTest {
+class PercentDecoderTest {
 
   @ParameterizedTest
   @CsvSource(
@@ -28,14 +28,24 @@ class BaggageCodecTest {
         "%6B,k", "%6C,l", "%6D,m", "%6E,n", "%6F,o", "%70,p", "%71,q", "%72,r", "%73,s", "%74,t",
         "%75,u", "%76,v", "%77,w", "%78,x", "%79,y", "%7A,z", "%7B,{", "%7C,|", "%7D,}", "%7E,~",
       })
-  void shouldDecodePercentEncodedValues(String percentEncoded, String expectedDecoded) {
-    assertThat(BaggageCodec.decode(percentEncoded, StandardCharsets.UTF_8))
-        .isEqualTo(expectedDecoded);
+  void decode_shouldDecodePercentEncodedValues(String percentEncoded, String expectedDecoded) {
+    assertThat(PercentDecoder.decode(percentEncoded)).isEqualTo(expectedDecoded);
   }
 
   @Test
-  void shouldIgnoreIfMalformedData() {
-    assertThat(BaggageCodec.decode("%", StandardCharsets.UTF_8)).isEqualTo("");
-    assertThat(BaggageCodec.decode("%1", StandardCharsets.UTF_8)).isEqualTo("");
+  void decode_shouldThrowOnMalformedData() {
+    assertThatThrownBy(() -> PercentDecoder.decode("%"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> PercentDecoder.decode("%1"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> PercentDecoder.decode("%GG"))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void decode_shouldNotDecodePlusAsSpace() {
+    // Unlike URLDecoder, + should NOT be decoded to space
+    assertThat(PercentDecoder.decode("a+b")).isEqualTo("a+b");
+    assertThat(PercentDecoder.decode("hello+world")).isEqualTo("hello+world");
   }
 }

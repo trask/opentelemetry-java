@@ -114,6 +114,20 @@ class ResourceConfigurationTest {
   }
 
   @Test
+  void createEnvironmentResource_PlusSignNotDecodedToSpace() {
+    // Per the W3C Baggage spec, otel.resource.attributes uses percent encoding, NOT
+    // application/x-www-form-urlencoded encoding. The + character should be preserved as-is,
+    // not decoded to a space.
+    Attributes attributes =
+        ResourceConfiguration.createEnvironmentResource(
+                DefaultConfigProperties.createFromMap(
+                    singletonMap(ResourceConfiguration.ATTRIBUTE_PROPERTY, "key=ab+c")))
+            .getAttributes();
+
+    assertThat(attributes).hasSize(1).containsEntry(stringKey("key"), "ab+c");
+  }
+
+  @Test
   void filterAttributes() {
     ConfigProperties configProperties =
         DefaultConfigProperties.createFromMap(ImmutableMap.of(DISABLED_ATTRIBUTE_KEYS, "foo,bar"));

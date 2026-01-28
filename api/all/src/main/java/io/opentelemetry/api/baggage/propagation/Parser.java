@@ -7,7 +7,7 @@ package io.opentelemetry.api.baggage.propagation;
 
 import io.opentelemetry.api.baggage.BaggageBuilder;
 import io.opentelemetry.api.baggage.BaggageEntryMetadata;
-import java.nio.charset.StandardCharsets;
+import io.opentelemetry.api.internal.PercentDecoder;
 import javax.annotation.Nullable;
 
 /**
@@ -146,7 +146,11 @@ class Parser {
     if (value == null) {
       return null;
     }
-    return BaggageCodec.decode(value, StandardCharsets.UTF_8);
+    try {
+      return PercentDecoder.decode(value);
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
   }
 
   /**
