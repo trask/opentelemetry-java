@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -420,6 +421,87 @@ class BatchLogRecordProcessorTest {
     emitLog(sdkLoggerProvider, LOG_MESSAGE_2);
     exported.await();
     await().untilAsserted(() -> assertThat(blp.getBatch()).isEmpty());
+  }
+
+  @Test
+  @Timeout(5)
+  void exportSetsContextClassLoader() throws InterruptedException {
+    ClassLoader registrationClassLoader = new ClassLoader() {};
+    ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+    AtomicReference<ClassLoader> observedClassLoader = new AtomicReference<>();
+    CountDownLatch exported = new CountDownLatch(1);
+
+    LogRecordExporter classLoaderCapturingExporter =
+        new LogRecordExporter() {
+          @Override
+          public CompletableResultCode export(Collection<LogRecordData> logs) {
+            observedClassLoader.set(Thread.currentThread().getContextClassLoader());
+            exported.countDown();
+            return CompletableResultCode.ofSuccess();
+          }
+
+          @Override
+          public CompletableResultCode flush() {
+            return CompletableResultCode.ofSuccess();
+          }
+
+          @Override
+          public CompletableResultCode shutdown() {
+            return CompletableResultCode.ofSuccess();
+          }
+        };
+
+    Thread.currentThread().setContextClassLoader(registrationClassLoader);
+    BatchLogRecordProcessor processor =
+        BatchLogRecordProcessor.builder(classLoaderCapturingExporter)
+            .setScheduleDelay(1, TimeUnit.MILLISECONDS)
+            .build();
+    Thread.currentThread().setContextClassLoader(originalClassLoader);
+
+    SdkLoggerProvider sdkLoggerProvider =
+        SdkLoggerProvider.builder().addLogRecordProcessor(processor).build();
+    emitLog(sdkLoggerProvider, LOG_MESSAGE_1);
+    exported.await();
+
+    assertThat(observedClassLoader.get()).isSameAs(registrationClassLoader);
+  }
+
+  @Test
+  @Timeout(5)
+  void shutdownSetsContextClassLoader() {
+    ClassLoader registrationClassLoader = new ClassLoader() {};
+    ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+    AtomicReference<ClassLoader> observedClassLoader = new AtomicReference<>();
+
+    LogRecordExporter classLoaderCapturingExporter =
+        new LogRecordExporter() {
+          @Override
+          public CompletableResultCode export(Collection<LogRecordData> logs) {
+            return CompletableResultCode.ofSuccess();
+          }
+
+          @Override
+          public CompletableResultCode flush() {
+            return CompletableResultCode.ofSuccess();
+          }
+
+          @Override
+          public CompletableResultCode shutdown() {
+            observedClassLoader.set(Thread.currentThread().getContextClassLoader());
+            return CompletableResultCode.ofSuccess();
+          }
+        };
+
+    Thread.currentThread().setContextClassLoader(registrationClassLoader);
+    BatchLogRecordProcessor processor =
+        BatchLogRecordProcessor.builder(classLoaderCapturingExporter)
+            .setScheduleDelay(1, TimeUnit.MILLISECONDS)
+            .build();
+    Thread.currentThread().setContextClassLoader(originalClassLoader);
+
+    processor.shutdown().join(5, TimeUnit.SECONDS);
+
+    assertThat(observedClassLoader.get()).isSameAs(registrationClassLoader);
   }
 
   @Test

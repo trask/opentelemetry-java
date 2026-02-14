@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * Implementation of the {@link LogRecordProcessor} that batches logs exported by the SDK then
@@ -161,6 +162,7 @@ public final class BatchLogRecordProcessor implements LogRecordProcessor {
     private volatile boolean continueWork = true;
     private final ArrayList<LogRecordData> batch;
     private final long maxQueueSize;
+    @Nullable private final ClassLoader contextClassLoader;
 
     private Worker(
         LogRecordExporter logRecordExporter,
@@ -182,6 +184,7 @@ public final class BatchLogRecordProcessor implements LogRecordProcessor {
       this.maxQueueSize = maxQueueSize;
 
       this.batch = new ArrayList<>(this.maxExportBatchSize);
+      this.contextClassLoader = Thread.currentThread().getContextClassLoader();
     }
 
     private void addLog(ReadWriteLogRecord logData) {
@@ -256,15 +259,23 @@ public final class BatchLogRecordProcessor implements LogRecordProcessor {
       flushResult.whenComplete(
           () -> {
             continueWork = false;
-            CompletableResultCode shutdownResult = logRecordExporter.shutdown();
-            shutdownResult.whenComplete(
-                () -> {
-                  if (!flushResult.isSuccess() || !shutdownResult.isSuccess()) {
-                    result.fail();
-                  } else {
-                    result.succeed();
-                  }
-                });
+            // Restore the context class loader that was active when the processor was created.
+            Thread currentThread = Thread.currentThread();
+            ClassLoader previousContextClassLoader = currentThread.getContextClassLoader();
+            currentThread.setContextClassLoader(contextClassLoader);
+            try {
+              CompletableResultCode shutdownResult = logRecordExporter.shutdown();
+              shutdownResult.whenComplete(
+                  () -> {
+                    if (!flushResult.isSuccess() || !shutdownResult.isSuccess()) {
+                      result.fail();
+                    } else {
+                      result.succeed();
+                    }
+                  });
+            } finally {
+              currentThread.setContextClassLoader(previousContextClassLoader);
+            }
           });
 
       return result;
@@ -288,6 +299,10 @@ public final class BatchLogRecordProcessor implements LogRecordProcessor {
         return;
       }
 
+      // Restore the context class loader that was active when the processor was created.
+      Thread currentThread = Thread.currentThread();
+      ClassLoader previousContextClassLoader = currentThread.getContextClassLoader();
+      currentThread.setContextClassLoader(contextClassLoader);
       String error = null;
       try {
         CompletableResultCode result =
@@ -305,6 +320,7 @@ public final class BatchLogRecordProcessor implements LogRecordProcessor {
         logger.log(Level.WARNING, "Exporter threw an Exception", e);
         error = e.getClass().getName();
       } finally {
+        currentThread.setContextClassLoader(previousContextClassLoader);
         logProcessorInstrumentation.finishLogs(batch.size(), error);
         batch.clear();
       }
