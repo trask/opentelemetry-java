@@ -79,6 +79,7 @@ public final class OkHttpGrpcSender implements GrpcSender {
   private final HttpUrl url;
   @Nullable private final Compressor compressor;
   private final Supplier<Map<String, List<String>>> headersSupplier;
+  @Nullable private final ClassLoader contextClassLoader;
 
   /** Creates a new {@link OkHttpGrpcSender}. */
   @SuppressWarnings("TooManyParameters")
@@ -128,6 +129,7 @@ public final class OkHttpGrpcSender implements GrpcSender {
     this.client = clientBuilder.build();
     this.compressor = compressor;
     this.headersSupplier = headersSupplier;
+    this.contextClassLoader = Thread.currentThread().getContextClassLoader();
     this.url = HttpUrl.get(endpoint);
   }
 
@@ -136,7 +138,15 @@ public final class OkHttpGrpcSender implements GrpcSender {
       MessageWriter messageWriter, Consumer<GrpcResponse> onResponse, Consumer<Throwable> onError) {
     Request.Builder requestBuilder = new Request.Builder().url(url);
 
-    Map<String, List<String>> headers = headersSupplier.get();
+    // Restore the context class loader that was active when the sender was created.
+    ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
+    Thread.currentThread().setContextClassLoader(contextClassLoader);
+    Map<String, List<String>> headers;
+    try {
+      headers = headersSupplier.get();
+    } finally {
+      Thread.currentThread().setContextClassLoader(previousClassLoader);
+    }
     if (headers != null) {
       headers.forEach(
           (key, values) -> values.forEach(value -> requestBuilder.addHeader(key, value)));

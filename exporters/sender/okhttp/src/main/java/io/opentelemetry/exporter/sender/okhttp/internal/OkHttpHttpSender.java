@@ -58,6 +58,7 @@ public final class OkHttpHttpSender implements HttpSender {
   private final Supplier<Map<String, List<String>>> headerSupplier;
   private final MediaType mediaType;
   @Nullable private final Compressor compressor;
+  @Nullable private final ClassLoader contextClassLoader;
 
   /** Create a sender. */
   @SuppressWarnings("TooManyParameters")
@@ -111,6 +112,7 @@ public final class OkHttpHttpSender implements HttpSender {
     this.mediaType = MediaType.parse(contentType);
     this.compressor = compressor;
     this.headerSupplier = headerSupplier;
+    this.contextClassLoader = Thread.currentThread().getContextClassLoader();
   }
 
   @Override
@@ -118,7 +120,15 @@ public final class OkHttpHttpSender implements HttpSender {
       MessageWriter messageWriter, Consumer<HttpResponse> onResponse, Consumer<Throwable> onError) {
     Request.Builder requestBuilder = new Request.Builder().url(url);
 
-    Map<String, List<String>> headers = headerSupplier.get();
+    // Restore the context class loader that was active when the sender was created.
+    ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
+    Thread.currentThread().setContextClassLoader(contextClassLoader);
+    Map<String, List<String>> headers;
+    try {
+      headers = headerSupplier.get();
+    } finally {
+      Thread.currentThread().setContextClassLoader(previousClassLoader);
+    }
     if (headers != null) {
       headers.forEach(
           (key, values) -> values.forEach(value -> requestBuilder.addHeader(key, value)));
