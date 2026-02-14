@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -594,6 +595,86 @@ class BatchSpanProcessorTest {
     // Need to check this because otherwise the variable span1 is unused, other option is to not
     // have a span1 variable.
     assertThat(exported).containsExactly(span1.toSpanData(), span2.toSpanData());
+  }
+
+  @Test
+  @Timeout(5)
+  void exportSetsContextClassLoader() throws InterruptedException {
+    ClassLoader registrationClassLoader = new ClassLoader() {};
+    ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+    AtomicReference<ClassLoader> observedClassLoader = new AtomicReference<>();
+    CountDownLatch exported = new CountDownLatch(1);
+
+    SpanExporter classLoaderCapturingExporter =
+        new SpanExporter() {
+          @Override
+          public CompletableResultCode export(Collection<SpanData> spans) {
+            observedClassLoader.set(Thread.currentThread().getContextClassLoader());
+            exported.countDown();
+            return CompletableResultCode.ofSuccess();
+          }
+
+          @Override
+          public CompletableResultCode flush() {
+            return CompletableResultCode.ofSuccess();
+          }
+
+          @Override
+          public CompletableResultCode shutdown() {
+            return CompletableResultCode.ofSuccess();
+          }
+        };
+
+    Thread.currentThread().setContextClassLoader(registrationClassLoader);
+    BatchSpanProcessor processor =
+        BatchSpanProcessor.builder(classLoaderCapturingExporter)
+            .setScheduleDelay(1, TimeUnit.MILLISECONDS)
+            .build();
+    Thread.currentThread().setContextClassLoader(originalClassLoader);
+
+    sdkTracerProvider = SdkTracerProvider.builder().addSpanProcessor(processor).build();
+    createEndedSpan(SPAN_NAME_1);
+    exported.await();
+
+    assertThat(observedClassLoader.get()).isSameAs(registrationClassLoader);
+  }
+
+  @Test
+  @Timeout(5)
+  void shutdownSetsContextClassLoader() {
+    ClassLoader registrationClassLoader = new ClassLoader() {};
+    ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+    AtomicReference<ClassLoader> observedClassLoader = new AtomicReference<>();
+
+    SpanExporter classLoaderCapturingExporter =
+        new SpanExporter() {
+          @Override
+          public CompletableResultCode export(Collection<SpanData> spans) {
+            return CompletableResultCode.ofSuccess();
+          }
+
+          @Override
+          public CompletableResultCode flush() {
+            return CompletableResultCode.ofSuccess();
+          }
+
+          @Override
+          public CompletableResultCode shutdown() {
+            observedClassLoader.set(Thread.currentThread().getContextClassLoader());
+            return CompletableResultCode.ofSuccess();
+          }
+        };
+
+    Thread.currentThread().setContextClassLoader(registrationClassLoader);
+    BatchSpanProcessor processor =
+        BatchSpanProcessor.builder(classLoaderCapturingExporter)
+            .setScheduleDelay(1, TimeUnit.MILLISECONDS)
+            .build();
+    Thread.currentThread().setContextClassLoader(originalClassLoader);
+
+    processor.shutdown().join(5, TimeUnit.SECONDS);
+
+    assertThat(observedClassLoader.get()).isSameAs(registrationClassLoader);
   }
 
   @Test

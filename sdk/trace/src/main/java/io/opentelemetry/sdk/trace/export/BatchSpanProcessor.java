@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * Implementation of the {@link SpanProcessor} that batches spans exported by the SDK then pushes
@@ -184,6 +185,7 @@ public final class BatchSpanProcessor implements SpanProcessor {
     private volatile boolean continueWork = true;
     private final ArrayList<SpanData> batch;
     private final long maxQueueSize;
+    @Nullable private final ClassLoader contextClassLoader;
 
     private Worker(
         SpanExporter spanExporter,
@@ -206,6 +208,7 @@ public final class BatchSpanProcessor implements SpanProcessor {
       this.maxQueueSize = maxQueueSize;
 
       this.batch = new ArrayList<>(this.maxExportBatchSize);
+      this.contextClassLoader = Thread.currentThread().getContextClassLoader();
     }
 
     private void addSpan(ReadableSpan span) {
@@ -283,15 +286,23 @@ public final class BatchSpanProcessor implements SpanProcessor {
       flushResult.whenComplete(
           () -> {
             continueWork = false;
-            CompletableResultCode shutdownResult = spanExporter.shutdown();
-            shutdownResult.whenComplete(
-                () -> {
-                  if (!flushResult.isSuccess() || !shutdownResult.isSuccess()) {
-                    result.fail();
-                  } else {
-                    result.succeed();
-                  }
-                });
+            // Restore the context class loader that was active when the processor was created.
+            Thread currentThread = Thread.currentThread();
+            ClassLoader previousContextClassLoader = currentThread.getContextClassLoader();
+            currentThread.setContextClassLoader(contextClassLoader);
+            try {
+              CompletableResultCode shutdownResult = spanExporter.shutdown();
+              shutdownResult.whenComplete(
+                  () -> {
+                    if (!flushResult.isSuccess() || !shutdownResult.isSuccess()) {
+                      result.fail();
+                    } else {
+                      result.succeed();
+                    }
+                  });
+            } finally {
+              currentThread.setContextClassLoader(previousContextClassLoader);
+            }
           });
 
       return result;
@@ -315,6 +326,10 @@ public final class BatchSpanProcessor implements SpanProcessor {
         return;
       }
 
+      // Restore the context class loader that was active when the processor was created.
+      Thread currentThread = Thread.currentThread();
+      ClassLoader previousContextClassLoader = currentThread.getContextClassLoader();
+      currentThread.setContextClassLoader(contextClassLoader);
       String error = null;
       try {
         CompletableResultCode result = spanExporter.export(Collections.unmodifiableList(batch));
@@ -332,6 +347,7 @@ public final class BatchSpanProcessor implements SpanProcessor {
         logger.log(Level.WARNING, "Exporter threw an Exception", t);
         error = t.getClass().getName();
       } finally {
+        currentThread.setContextClassLoader(previousContextClassLoader);
         spanProcessorInstrumentation.finishSpans(batch.size(), error);
         batch.clear();
       }
