@@ -72,6 +72,7 @@ public final class JdkHttpSender implements HttpSender {
   private final Supplier<Map<String, List<String>>> headerSupplier;
   @Nullable private final RetryPolicy retryPolicy;
   private final Predicate<IOException> retryExceptionPredicate;
+  @Nullable private final ClassLoader contextClassLoader;
 
   // Visible for testing
   JdkHttpSender(
@@ -94,6 +95,7 @@ public final class JdkHttpSender implements HttpSender {
         Optional.ofNullable(retryPolicy)
             .map(RetryPolicy::getRetryExceptionPredicate)
             .orElse(JdkHttpSender::isRetryableException);
+    this.contextClassLoader = Thread.currentThread().getContextClassLoader();
     if (executorService == null) {
       this.executorService = newExecutor();
       this.managedExecutor = true;
@@ -178,7 +180,15 @@ public final class JdkHttpSender implements HttpSender {
   HttpResponse<byte[]> sendInternal(MessageWriter requestBodyWriter) throws IOException {
     long startTimeNanos = System.nanoTime();
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder().uri(endpoint).timeout(timeout);
-    Map<String, List<String>> headers = headerSupplier.get();
+    // Restore the context class loader that was active when the sender was created.
+    ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
+    Thread.currentThread().setContextClassLoader(contextClassLoader);
+    Map<String, List<String>> headers;
+    try {
+      headers = headerSupplier.get();
+    } finally {
+      Thread.currentThread().setContextClassLoader(previousClassLoader);
+    }
     if (headers != null) {
       headers.forEach((key, values) -> values.forEach(value -> requestBuilder.header(key, value)));
     }
