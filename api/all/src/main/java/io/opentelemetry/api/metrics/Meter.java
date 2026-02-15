@@ -5,6 +5,7 @@
 
 package io.opentelemetry.api.metrics;
 
+import java.util.function.Consumer;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -144,5 +145,40 @@ public interface Meter {
       ObservableMeasurement... additionalMeasurements) {
     return DefaultMeter.getInstance()
         .batchCallback(callback, observableMeasurement, additionalMeasurements);
+  }
+
+  /**
+   * Creates a batch callback with the given measured object.
+   *
+   * <p>The callback will be called when the instruments are being observed, with {@code obj} passed
+   * as the argument. This allows the SDK to hold a weak reference to {@code obj}, enabling
+   * automatic cleanup when the measured object is garbage collected.
+   *
+   * <p>The {@code obj} should be an independently-rooted object that the application holds for its
+   * own purposes (e.g. a connection pool, service instance, or cache). When the application drops
+   * its strong reference to {@code obj}, the SDK may automatically remove the callback.
+   *
+   * <p>Callbacks are expected to abide by the following restrictions:
+   *
+   * <ul>
+   *   <li>Run in a finite amount of time.
+   *   <li>Safe to call repeatedly, across multiple threads.
+   *   <li>Only observe values to registered instruments (i.e. {@code observableMeasurement} and
+   *       {@code additionalMeasurements}
+   * </ul>
+   *
+   * @param obj The measured object. The callback receives this as its argument.
+   * @param callback a callback used to observe values on-demand.
+   * @param observableMeasurement Instruments for which the callback may observe values.
+   * @param additionalMeasurements Instruments for which the callback may observe values.
+   * @param <T> The type of the measured object.
+   */
+  @SuppressWarnings("InconsistentOverloads")
+  default <T> BatchCallback batchCallback(
+      T obj,
+      Consumer<T> callback,
+      ObservableMeasurement observableMeasurement,
+      ObservableMeasurement... additionalMeasurements) {
+    return batchCallback(() -> callback.accept(obj), observableMeasurement, additionalMeasurements);
   }
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.api.metrics;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -48,6 +49,34 @@ public interface LongGaugeBuilder {
    * @param callback A callback which observes measurements when invoked.
    */
   ObservableLongGauge buildWithCallback(Consumer<ObservableLongMeasurement> callback);
+
+  /**
+   * Builds an Asynchronous Gauge instrument with the given callback.
+   *
+   * <p>The callback will be called when the instrument is being observed, with {@code obj} passed
+   * as the first argument. This allows the SDK to hold a weak reference to {@code obj}, enabling
+   * automatic cleanup when the measured object is garbage collected.
+   *
+   * <p>The {@code obj} should be an independently-rooted object that the application holds for its
+   * own purposes (e.g. a connection pool, service instance, or cache). When the application drops
+   * its strong reference to {@code obj}, the SDK may automatically remove the callback.
+   *
+   * <p>Callbacks are expected to abide by the following restrictions:
+   *
+   * <ul>
+   *   <li>Run in a finite amount of time.
+   *   <li>Safe to call repeatedly, across multiple threads.
+   * </ul>
+   *
+   * @param obj The measured object. The callback receives this as its first argument.
+   * @param callback A callback which observes measurements when invoked.
+   * @param <T> The type of the measured object.
+   */
+  @SuppressWarnings("InconsistentOverloads")
+  default <T> ObservableLongGauge buildWithCallback(
+      T obj, BiConsumer<T, ObservableLongMeasurement> callback) {
+    return buildWithCallback(measurement -> callback.accept(obj, measurement));
+  }
 
   /**
    * Build an observer for this instrument to observe values from a {@link BatchCallback}.
