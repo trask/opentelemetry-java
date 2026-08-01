@@ -4,7 +4,7 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       version: ${{ steps.create-github-release.outputs.version }}
     steps:
@@ -22,9 +22,9 @@ jobs:
           java-version: 17
 
       - name: Build and publish artifacts
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: assemble publishToSonatype closeAndReleaseSonatypeStagingRepository
+        uses: gradle/actions/setup-gradle@v4
+
+      - run: ./gradlew assemble publishToSonatype closeAndReleaseSonatypeStagingRepository
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
