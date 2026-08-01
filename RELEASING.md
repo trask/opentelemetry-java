@@ -86,9 +86,9 @@ The following credentials are required for publishing (and automatically set in 
   * Request [publishing permissions](https://central.sonatype.org/publish/manage-permissions/) by
     commenting on [OSSRH-63768](https://issues.sonatype.org/browse/OSSRH-63768) with confirmation
     from another maintainer.
-  * To obtain `SONATYPE_USER` and `SONATYPE_KEY` for your account, login
-    to [oss.sonatype.org](https://oss.sonatype.org/) and navigate to Profile -> User Token -> Access
-    User Token.
+  * To obtain `SONATYPE_USER` and `SONATYPE_KEY` for your account, log in
+    to [central.sonatype.com](https://central.sonatype.com/) and navigate to Profile -> View User Tokens
+    (see [detailed instructions](https://central.sonatype.org/publish/generate-portal-token/)).
 
 Additionally, credentials are stored with maintainers via
 the [OpenTelemetry 1Password](https://opentelemetry.1password.com/signin) account. The following
