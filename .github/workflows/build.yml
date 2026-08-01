@@ -20,8 +20,10 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-latest
-          - ubuntu-20.04
+          # macos-latest was Intel when this branch was cut; it is now arm64, where temurin 8 is
+          # not available
+          - macos-15-intel
+          - ubuntu-22.04
         test-java-version:
           - 8
           - 11
@@ -29,7 +31,7 @@ jobs:
           - 19
         # Collect coverage on latest LTS
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             test-java-version: 17
             coverage: true
     steps:
@@ -51,15 +53,20 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - uses: gradle/gradle-build-action@v2
-        with:
-          arguments: |
-            build
-            ${{ matrix.coverage && 'jacocoTestReport' || '' }}
-            -PtestJavaVersion=${{ matrix.test-java-version }}
-            -Porg.gradle.java.installations.paths=${{ steps.setup-java-test.outputs.path }},${{ steps.setup-java.outputs.path }}
+      - uses: gradle/actions/setup-gradle@v4
+
+      # jApiCmp is excluded on release branches because it compares current to latest,
+      # which isn't appropriate for release branches
+      - run: >
+          ./gradlew build
+          ${{ matrix.coverage && 'jacocoTestReport' || '' }}
+          ${{ (startsWith(github.ref_name, 'release/') || startsWith(github.base_ref, 'release/')) && '-x jApiCmp' || '' }}
+          -PtestJavaVersion=${{ matrix.test-java-version }}
+          -Porg.gradle.java.installations.paths=${{ steps.setup-java-test.outputs.path }},${{ steps.setup-java.outputs.path }}
 
       - name: Check for diff
+        # The jApiCmp diff compares current to latest, which isn't appropriate for release branches
+        if: ${{ !startsWith(github.ref_name, 'release/') && !startsWith(github.base_ref, 'release/') }}
         run: |
           if git diff --quiet
           then 
@@ -71,10 +78,10 @@ jobs:
             exit 1
           fi
 
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v5
         if: ${{ matrix.coverage }}
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ matrix.coverage }}
         with:
           name: coverage-report
@@ -104,7 +111,7 @@ jobs:
     name: publish-snapshots${{ (github.ref_name != 'main' || github.repository != 'open-telemetry/opentelemetry-java') && ' (skipped)' || '' }}
     # intentionally not blocking snapshot publishing on markdown-link-check or misspell-check
     needs: build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
         with:
@@ -117,12 +124,13 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - uses: gradle/gradle-build-action@v2
+      - uses: gradle/actions/setup-gradle@v4
         # skipping release branches because the versions in those branches are not snapshots
         # (also this skips pull requests)
         if: ${{ github.ref_name == 'main' && github.repository == 'open-telemetry/opentelemetry-java' }}
-        with:
-          arguments: assemble publishToSonatype
+
+      - run: ./gradlew assemble publishToSonatype
+        if: ${{ github.ref_name == 'main' && github.repository == 'open-telemetry/opentelemetry-java' }}
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
