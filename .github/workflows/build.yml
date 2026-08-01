@@ -21,7 +21,7 @@ jobs:
       matrix:
         os:
           - macos-latest
-          - macos-13
+          - macos-15-intel
           - ubuntu-latest
         test-java-version:
           - 8
@@ -30,19 +30,19 @@ jobs:
           - 21
         # Collect coverage on latest LTS
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             test-java-version: 21
             coverage: true
             jmh-based-tests: true
-        # macos-latest drops support for java 8 temurin. Run java 8 on macos-13. Run java 11, 17, 21 on macos-latest.
+        # macos-latest drops support for java 8 temurin. Run java 8 on macos-15-intel. Run java 11, 17, 21 on macos-latest.
         exclude:
           - os: macos-latest
             test-java-version: 8
-          - os: macos-13
+          - os: macos-15-intel
             test-java-version: 11
-          - os: macos-13
+          - os: macos-15-intel
             test-java-version: 17
-          - os: macos-13
+          - os: macos-15-intel
             test-java-version: 21
     steps:
       - uses: actions/checkout@v4
@@ -62,10 +62,13 @@ jobs:
           java-version: 17
 
       - uses: gradle/actions/setup-gradle@v3
+        # jApiCmp is excluded on release branches because it compares current to latest,
+        # which isn't appropriate for release branches
         with:
           arguments: |
             build
             ${{ matrix.coverage && 'jacocoTestReport' || '' }}
+            ${{ (startsWith(github.ref_name, 'release/') || startsWith(github.base_ref, 'release/')) && '-x jApiCmp' || '' }}
             -PtestJavaVersion=${{ matrix.test-java-version }}
             -Porg.gradle.java.installations.paths=${{ steps.setup-java-test.outputs.path }},${{ steps.setup-java.outputs.path }}
         env:
